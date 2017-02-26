@@ -49,7 +49,9 @@ public class App
             SequenceSummarizer summarizer = ctx.getBean(SequenceSummarizer.class);
             summarizer.printSummary();
             System.out.println(Arrays.asList(featureSequence));
+            System.out.println("Done");
 
         };
+
     }
 }
