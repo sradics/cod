@@ -50,5 +50,7 @@
     <orderEntry type="library" scope="RUNTIME" name="Maven: net.bytebuddy:byte-buddy:1.6.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: net.bytebuddy:byte-buddy-agent:1.6.9" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.objenesis:objenesis:2.5" level="project" />
+    <orderEntry type="library" name="Maven: com.jgoodies:jgoodies-forms:1.9.0" level="project" />
+    <orderEntry type="library" name="Maven: com.jgoodies:jgoodies-common:1.8.1" level="project" />
   </component>
 </module>

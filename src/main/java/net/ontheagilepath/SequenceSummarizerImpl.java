@@ -18,6 +18,8 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
         summaryDataList.add(summary);
     }
 
+
+
     @Override
     public void printSummary(){
         summaryDataList.sort( new Comparator<SequenceSummaryData>() {
@@ -29,5 +31,10 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
         for (SequenceSummaryData sequenceSummaryData : summaryDataList) {
             System.out.println(sequenceSummaryData);
         }
+    }
+
+    @Override
+    public void clear() {
+        summaryDataList.clear();
     }
 }

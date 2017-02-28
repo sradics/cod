@@ -3,9 +3,7 @@ package net.ontheagilepath;
 import org.joda.time.DateTime;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -14,7 +12,7 @@ import java.util.Arrays;
  * Hello world!
  *
  */
-@SpringBootApplication
+//@SpringBootApplication
 public class App 
 {
     public static void main( String[] args )
@@ -25,7 +23,7 @@ public class App
     }
 
 
-    @Bean
+    //@Bean
     public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
         return args -> {
             DateTime startDate = new DateTime(2017,1,1,12,00);

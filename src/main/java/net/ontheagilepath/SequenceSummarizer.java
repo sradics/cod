@@ -7,4 +7,6 @@ public interface SequenceSummarizer {
     void addSummary(SequenceSummaryData summary);
 
     void printSummary();
+
+    void clear();
 }
