@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -21,7 +22,8 @@ import java.util.Arrays;
 import java.util.Date;
 
 @Configuration
-@ComponentScan
+@ComponentScan(excludeFilters={
+        @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value=App.class)})
 @EnableAutoConfiguration
 public class FeatureSequenceGUI {
     private JButton addFeatureButton;
