@@ -36,28 +36,28 @@ public class CostOfDelayDurationCalculatorImplUnitTest {
     @Test
     public void calculateDurationOverlap_ShiftedStartTime() throws Exception {
         DateTime codStartDate = startDate.plusWeeks(2);
-        feature.setCostOfDelayStartDate(codStartDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
         Assert.assertEquals(BigDecimal.valueOf(8),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
     @Test
     public void calculateDurationOverlap_EarlierEnding() throws Exception {
         DateTime codEndDate = startDate.plusWeeks(6);
-        feature.setCostOfDelayEndDate(codEndDate);
+        feature.setCostOfDelayEndWeek(codEndDate);
         Assert.assertEquals(BigDecimal.valueOf(6),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
     @Test
     public void calculateDurationOverlap_EarlierEnding_SlightWeekOverlap() throws Exception {
         DateTime codEndDate = startDate.plusWeeks(6).plusDays(1);
-        feature.setCostOfDelayEndDate(codEndDate);
+        feature.setCostOfDelayEndWeek(codEndDate);
         Assert.assertEquals(BigDecimal.valueOf(7),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
     @Test
     public void calculateDurationOverlap_EarlierEnding_SlightWeekMinusOverlap() throws Exception {
         DateTime codEndDate = startDate.plusWeeks(6).minusDays(4);
-        feature.setCostOfDelayEndDate(codEndDate);
+        feature.setCostOfDelayEndWeek(codEndDate);
         Assert.assertEquals(BigDecimal.valueOf(6),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
@@ -65,8 +65,8 @@ public class CostOfDelayDurationCalculatorImplUnitTest {
     public void calculateDurationOverlap_SubInterval() throws Exception {
         DateTime codStartDate = startDate.plusWeeks(2);
         DateTime codEndDate = startDate.plusWeeks(9);
-        feature.setCostOfDelayStartDate(codStartDate);
-        feature.setCostOfDelayEndDate(codEndDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
+        feature.setCostOfDelayEndWeek(codEndDate);
         Assert.assertEquals(BigDecimal.valueOf(7),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
@@ -74,8 +74,8 @@ public class CostOfDelayDurationCalculatorImplUnitTest {
     public void calculateDurationOverlap_SubIntervalOutOfRange() throws Exception {
         DateTime codStartDate = startDate.plusWeeks(duration10Weeks.intValue()+1);
         DateTime codEndDate = startDate.plusWeeks(duration10Weeks.intValue()+5);
-        feature.setCostOfDelayStartDate(codStartDate);
-        feature.setCostOfDelayEndDate(codEndDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
+        feature.setCostOfDelayEndWeek(codEndDate);
         Assert.assertEquals(BigDecimal.valueOf(0),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
@@ -83,8 +83,8 @@ public class CostOfDelayDurationCalculatorImplUnitTest {
     public void calculateDurationOverlap_SubIntervalStartOutOfRange() throws Exception {
         DateTime codStartDate = startDate.minusWeeks(2);
         DateTime codEndDate = startDate.plusWeeks(duration10Weeks.intValue()-5);
-        feature.setCostOfDelayStartDate(codStartDate);
-        feature.setCostOfDelayEndDate(codEndDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
+        feature.setCostOfDelayEndWeek(codEndDate);
         Assert.assertEquals(BigDecimal.valueOf(5),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
@@ -92,8 +92,8 @@ public class CostOfDelayDurationCalculatorImplUnitTest {
     public void calculateDurationOverlap_SubIntervalStartAndEndOutOfRange() throws Exception {
         DateTime codStartDate = startDate.minusWeeks(2);
         DateTime codEndDate = startDate.plusWeeks(duration10Weeks.intValue()+2);
-        feature.setCostOfDelayStartDate(codStartDate);
-        feature.setCostOfDelayEndDate(codEndDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
+        feature.setCostOfDelayEndWeek(codEndDate);
         Assert.assertEquals(duration10Weeks.add(BigDecimal.valueOf(0)),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
@@ -101,43 +101,43 @@ public class CostOfDelayDurationCalculatorImplUnitTest {
     public void calculateDurationOverlap_SubInterval_SameDays() throws Exception {
         DateTime codStartDate = startDate.plusWeeks(9);
         DateTime codEndDate = startDate.plusWeeks(9);
-        feature.setCostOfDelayStartDate(codStartDate);
-        feature.setCostOfDelayEndDate(codEndDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
+        feature.setCostOfDelayEndWeek(codEndDate);
         Assert.assertEquals(BigDecimal.valueOf(1),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
     @Test
     public void calculateDurationOverlap_ShiftedStartTime_MinusWeeks() throws Exception {
         DateTime codStartDate = startDate.minusWeeks(1);
-        feature.setCostOfDelayStartDate(codStartDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
         Assert.assertEquals(duration10Weeks.add(BigDecimal.ZERO),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
     @Test
     public void calculateDurationOverlap_ShiftedStartTime_OneDayShift() throws Exception {
         DateTime codStartDate = startDate.plusDays(1);
-        feature.setCostOfDelayStartDate(codStartDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
         Assert.assertEquals(duration10Weeks,costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
     @Test
     public void calculateDurationOverlap_ShiftedStartTime_6DayShift() throws Exception {
         DateTime codStartDate = startDate.plusDays(6);
-        feature.setCostOfDelayStartDate(codStartDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
         Assert.assertEquals(duration10Weeks,costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
     @Test
     public void calculateDurationOverlap_ShiftedStartTime_7DayShift() throws Exception {
         DateTime codStartDate = startDate.plusDays(7);
-        feature.setCostOfDelayStartDate(codStartDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
         Assert.assertEquals(BigDecimal.valueOf(9),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 
     @Test
     public void calculateDurationOverlap_ShiftedStartTime_OuterBounds() throws Exception {
         DateTime codStartDate = startDate.plusWeeks(duration10Weeks.intValue());
-        feature.setCostOfDelayStartDate(codStartDate);
+        feature.setCostOfDelayStartWeek(codStartDate);
         Assert.assertEquals(BigDecimal.valueOf(0),costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration10Weeks,feature));
     }
 }

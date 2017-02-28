@@ -3,7 +3,6 @@ package net.ontheagilepath;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,19 +13,25 @@ import java.util.List;
 public class FeatureSequenceModel {
     private ArrayList<Feature> features = new ArrayList<Feature>();
 
-    public void addFeature(String name, String costOfDelayPerWeek, String durationInWeeks, String startWeek, String endWeek, String projectStart) {
+    public void addFeature(String name, String costOfDelayPerWeek, String durationInWeeks, String startWeek, String endWeek, String startDate, String endDate, String projectStart) {
         DateTime projectStartDate = DateTime.parse(projectStart, DateTimeFormat.forPattern("dd.MM.yyyy"));
         Feature feature = new FeatureBuilder()
                 .withName(name)
-                .withDurationInWeeks(BigDecimal.valueOf(Long.valueOf(durationInWeeks)))
-                .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(Long.valueOf(costOfDelayPerWeek))))
                 .build();
-
+        feature.setDurationInWeeks(durationInWeeks);
+        feature.setCostOfDelayPerWeek(costOfDelayPerWeek);
         if (startWeek!=null && !startWeek.isEmpty()){
-            feature.setCostOfDelayStartDate(projectStartDate.plusWeeks(Integer.valueOf(startWeek)));
+            feature.setCostOfDelayStartWeek(projectStartDate,startWeek);
         }
         if (endWeek!=null && !endWeek.isEmpty()){
-            feature.setCostOfDelayEndDate(projectStartDate.plusWeeks(Integer.valueOf(endWeek)));
+            feature.setCostOfDelayEndWeek(projectStartDate,endWeek);
+        }
+
+        if (startDate!=null && !startDate.isEmpty()){
+            feature.setCostOfDelayStartWeek(DateTime.parse(startDate, DateTimeFormat.forPattern("dd.MM.yyyy")));
+        }
+        if (endDate!=null && !endDate.isEmpty()){
+            feature.setCostOfDelayEndWeek(DateTime.parse(endDate, DateTimeFormat.forPattern("dd.MM.yyyy")));
         }
 
         features.add(feature);
@@ -34,6 +39,10 @@ public class FeatureSequenceModel {
 
     public List<Feature> getFeatures(){
         return Collections.unmodifiableList(features);
+    }
+
+    public void clear(){
+        features.clear();
     }
 
 }

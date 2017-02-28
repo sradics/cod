@@ -47,8 +47,8 @@ public class FeatureBuilder {
         Feature feature = new Feature(durationInWeeks);
         feature.setCostOfDelayPerWeek(costOfDelayPerWeek);
         feature.setName(name);
-        feature.setCostOfDelayStartDate(costOfDelayStartDate);
-        feature.setCostOfDelayEndDate(costOfDelayEndDate);
+        feature.setCostOfDelayStartWeek(costOfDelayStartDate);
+        feature.setCostOfDelayEndWeek(costOfDelayEndDate);
         return feature;
     }
 }

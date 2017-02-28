@@ -1,6 +1,7 @@
 package net.ontheagilepath;
 
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 
 import java.math.BigDecimal;
 
@@ -41,6 +42,25 @@ public class Feature {
         }
     }
 
+    public void setDurationInWeeks(String weeks){
+        durationInWeeks = BigDecimal.valueOf(Long.valueOf((String)weeks));
+    }
+    public void setCostOfDelayStartWeek(DateTime projectStartDate, String startWeek){
+        costOfDelayStartDate = projectStartDate.plusWeeks(Integer.valueOf(startWeek));
+    }
+    public void setCostOfDelayEndWeek(DateTime projectStartDate, String endWeek){
+        costOfDelayEndDate = projectStartDate.plusWeeks(Integer.valueOf(endWeek));
+    }
+    public void setCostOfDelayStartDate(String startDate){
+        costOfDelayStartDate = DateTime.parse(startDate, DateTimeFormat.forPattern("dd.MM.yyyy"));
+    }
+    public void setCostOfDelayEndDate( String endDate){
+        costOfDelayEndDate = DateTime.parse(endDate, DateTimeFormat.forPattern("dd.MM.yyyy"));
+    }
+    public void setCostOfDelayPerWeek(String cod){
+        costOfDelayPerWeek = new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(Long.valueOf((String)cod)));
+    }
+
     public BigDecimal getDurationInWeeks() {
         return durationInWeeks;
     }
@@ -69,7 +89,7 @@ public class Feature {
         return costOfDelayStartDate;
     }
 
-    public void setCostOfDelayStartDate(DateTime costOfDelayStartDate) {
+    public void setCostOfDelayStartWeek(DateTime costOfDelayStartDate) {
         this.costOfDelayStartDate = costOfDelayStartDate;
     }
 
@@ -77,7 +97,7 @@ public class Feature {
         return costOfDelayEndDate;
     }
 
-    public void setCostOfDelayEndDate(DateTime costOfDelayEndDate) {
+    public void setCostOfDelayEndWeek(DateTime costOfDelayEndDate) {
         this.costOfDelayEndDate = costOfDelayEndDate;
     }
 
