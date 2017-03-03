@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+            jxb:version="2.0">
+
+    <xsd:element name="Features" type="FeatureListType"/>
+
+    <xsd:complexType name="FeatureListType">
+        <xsd:sequence>
+            <xsd:element name="Feature" type="FeatureType"
+                         maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="ProjectStartDate" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="FeatureType">
+        <xsd:sequence>
+            <xsd:element name="Name" type="xsd:string"/>
+            <xsd:element name="CostOfDelayPerWeek" type="xsd:string"/>
+            <xsd:element name="DurationInWeeks" type="xsd:string"/>
+            <xsd:element name="CostOfDelayStartWeek" type="xsd:string"/>
+            <xsd:element name="CostOfDelayEndWeek" type="xsd:string"/>
+            <xsd:element name="CostOfDelayStartDate" type="xsd:string"/>
+            <xsd:element name="CostOfDelayEndDate" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>

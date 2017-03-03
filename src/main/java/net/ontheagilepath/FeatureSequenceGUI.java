@@ -1,5 +1,8 @@
 package net.ontheagilepath;
 
+import net.ontheagilepath.binding.FeatureListType;
+import net.ontheagilepath.binding.FeatureType;
+import net.ontheagilepath.binding.ObjectFactory;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -13,13 +16,21 @@ import org.springframework.context.annotation.FilterType;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 @Configuration
 @ComponentScan(excludeFilters={
@@ -40,6 +51,8 @@ public class FeatureSequenceGUI {
     private JButton clearButton;
     private JTextField codStartDate;
     private JTextField codEndDate;
+    private JButton saveInput;
+    private JButton loadInputButton;
 
     private FeatureSequenceModel sequenceModel = new FeatureSequenceModel();
 
@@ -54,7 +67,6 @@ public class FeatureSequenceGUI {
     private ApplicationContext applicationContext;
 
     public FeatureSequenceGUI() {
-
         TableModel tableModel = new AbstractTableModel() {
             @Override
             public int getRowCount() {
@@ -135,24 +147,164 @@ public class FeatureSequenceGUI {
 
         projectStartDate.setText(new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
 
-        addFeatureButton.addActionListener(new ActionListener() {
+        addFeatureButtonActionPerformed();
+        addCalculateSequenceAction();
+        addClearButtonAction();
+        addCoDStartWeekLostFocusListener();
+        addCoDEndDateLostFocusListener();
+        addSaveInputListener();
+        addLoadInputListener();
+    }
+
+    private void addLoadInputListener() {
+        loadInputButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sequenceModel.addFeature(
-                        featureName.getText(),
-                        costOfDelayPerWeek.getText(),
-                        durationInWeeks.getText(),
-                        codStartWeek.getText(),
-                        codEndWeek.getText(),
-                        codStartDate.getText(),
-                        codEndDate.getText(),
-                        projectStartDate.getText());
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Specify file with input to load");
+                int userSelection = fileChooser.showOpenDialog(MajorPanel);
+                if (userSelection == JFileChooser.APPROVE_OPTION) {
+                    File fileToOpen = fileChooser.getSelectedFile();
 
-                featureTable.updateUI();
-                featureTable.getTableHeader().updateUI();
+                    try {
+                        JAXBContext jc = JAXBContext.newInstance( "net.ontheagilepath.binding" );
+                        Unmarshaller u = jc.createUnmarshaller();
+                        JAXBElement<FeatureListType> doc = (JAXBElement<FeatureListType>)u.unmarshal(
+                                new FileInputStream(fileToOpen)
+                        );
+
+                        sequenceModel.clear();
+                        SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
+                        summarizer.clear();
+
+                        FeatureListType featureListType = doc.getValue();
+                        projectStartDate.setText(featureListType.getProjectStartDate());
+                        List<FeatureType> features = featureListType.getFeature();
+                        for (FeatureType feature : features) {
+                            sequenceModel.addFeature(
+                                feature.getName(),
+                                feature.getCostOfDelayPerWeek(),
+                                feature.getDurationInWeeks(),
+                                feature.getCostOfDelayStartWeek(),
+                                feature.getCostOfDelayEndWeek(),
+                                feature.getCostOfDelayStartDate(),
+                                feature.getCostOfDelayEndDate(),
+                                    featureListType.getProjectStartDate()
+                            );
+                        }
+
+                        featureTable.updateUI();
+
+
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+
+                }
             }
         });
+    }
 
+    private void addSaveInputListener() {
+        saveInput.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Specify file to save");
+                int userSelection = fileChooser.showSaveDialog(MajorPanel);
+                if (userSelection == JFileChooser.APPROVE_OPTION){
+                    File fileToSave = fileChooser.getSelectedFile();
+                    List<Feature> features = sequenceModel.getFeatures();
+                    ObjectFactory objectFactory = new ObjectFactory();
+                    FeatureListType featureList = objectFactory.createFeatureListType();
+                    featureList.setProjectStartDate(projectStartDate.getText());
+                    for (Feature feature : features) {
+                        FeatureType featureType = objectFactory.createFeatureType();
+                        if (feature.getCostOfDelayStartDate()!=null)
+                            featureType.setCostOfDelayStartDate(feature.getCostOfDelayStartDate().toString("dd.MM.yyyy"));
+                        if (feature.getCostOfDelayEndDate()!=null)
+                            featureType.setCostOfDelayEndDate(feature.getCostOfDelayEndDate().toString("dd.MM.yyyy"));
+
+
+                        featureType.setName(feature.getName());
+                        if (feature.getDurationInWeeks()!=null)
+                            featureType.setDurationInWeeks(feature.getDurationInWeeks().toEngineeringString());
+                        if (feature.getCostOfDelayPerWeek()!=null)
+                            featureType.setCostOfDelayPerWeek(feature.getCostOfDelayPerWeek().getCost().toEngineeringString());
+
+                        featureType.setCostOfDelayStartWeek(null);
+                        featureType.setCostOfDelayEndWeek(null);
+                        featureList.getFeature().add(featureType);
+                    }
+
+
+                    try {
+                        JAXBElement<FeatureListType> gl =
+                                objectFactory.createFeatures( featureList );
+                        JAXBContext jc = JAXBContext.newInstance( "net.ontheagilepath.binding" );
+                        Marshaller m = jc.createMarshaller();
+                        m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
+                        m.marshal( gl, new FileOutputStream(fileToSave) );
+                    } catch( Exception jbe ){
+                        throw new RuntimeException(jbe);
+                    }
+                }
+            }
+        });
+    }
+
+    private void addTableModel() {
+
+    }
+
+    private void addCoDEndDateLostFocusListener() {
+        codEndWeek.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                super.focusLost(e);
+                if (projectStartDate.getText()!=null && !projectStartDate.getText().isEmpty()) {
+                    if (codEndWeek.getText() != null && !codEndWeek.getText().isEmpty()) {
+                        codEndDate.setText(DateTime.parse(projectStartDate.getText(),
+                                DateTimeFormat.forPattern("dd.MM.yyyy")).plusWeeks(Integer.valueOf(codEndWeek.getText())).toString("dd.MM.yyyy"));
+                    }else{
+                        codEndDate.setText(null);
+                    }
+                }
+            }
+        });
+    }
+
+    private void addCoDStartWeekLostFocusListener() {
+        codStartWeek.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                super.focusLost(e);
+                if (projectStartDate.getText()!=null && !projectStartDate.getText().isEmpty()) {
+                    if (codStartWeek.getText() != null && !codStartWeek.getText().isEmpty()) {
+                        codStartDate.setText(DateTime.parse(projectStartDate.getText(),
+                                DateTimeFormat.forPattern("dd.MM.yyyy")).plusWeeks(Integer.valueOf(codStartWeek.getText())).toString("dd.MM.yyyy"));
+                    }else{
+                        codStartDate.setText(null);
+                    }
+                }
+            }
+        });
+    }
+
+    private void addClearButtonAction() {
+        clearButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sequenceModel.clear();
+                featureTable.updateUI();
+                SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
+                summarizer.clear();
+            }
+        });
+    }
+
+    private void addCalculateSequenceAction() {
         calculateSequence.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -183,38 +335,24 @@ public class FeatureSequenceGUI {
                 System.out.println("Done");
             }
         });
+    }
 
-        clearButton.addActionListener(new ActionListener() {
+    private void addFeatureButtonActionPerformed() {
+        addFeatureButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sequenceModel.clear();
+                sequenceModel.addFeature(
+                        featureName.getText(),
+                        costOfDelayPerWeek.getText(),
+                        durationInWeeks.getText(),
+                        codStartWeek.getText(),
+                        codEndWeek.getText(),
+                        codStartDate.getText(),
+                        codEndDate.getText(),
+                        projectStartDate.getText());
+
                 featureTable.updateUI();
-                SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
-                summarizer.clear();
-            }
-        });
-        codStartWeek.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                super.focusLost(e);
-                if (projectStartDate.getText()!=null && !projectStartDate.getText().isEmpty()) {
-                    if (codStartWeek.getText() != null && !codStartWeek.getText().isEmpty()) {
-                        codStartDate.setText(DateTime.parse(projectStartDate.getText(),
-                                DateTimeFormat.forPattern("dd.MM.yyyy")).plusWeeks(Integer.valueOf(codStartWeek.getText())).toString("dd.MM.yyyy"));
-                    }
-                }
-            }
-        });
-        codEndWeek.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                super.focusLost(e);
-                if (projectStartDate.getText()!=null && !projectStartDate.getText().isEmpty()) {
-                    if (codEndWeek.getText() != null && !codEndWeek.getText().isEmpty()) {
-                        codEndDate.setText(DateTime.parse(projectStartDate.getText(),
-                                DateTimeFormat.forPattern("dd.MM.yyyy")).plusWeeks(Integer.valueOf(codEndWeek.getText())).toString("dd.MM.yyyy"));
-                    }
-                }
+                featureTable.getTableHeader().updateUI();
             }
         });
     }

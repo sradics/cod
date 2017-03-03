@@ -70,8 +70,32 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>jaxb2-maven-plugin</artifactId>
+        <version>2.2</version>
+        <executions>
+          <execution>
+            <id>xjc</id>
+            <goals>
+              <goal>xjc</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <!-- The package of your generated sources -->
+          <packageName>net.ontheagilepath.binding</packageName>
+          <sources>
+            <source>src/main/resources/cod.xsd</source>
+          </sources>
+          <xsdPathWithinArtifact>META-INF/jaxb/xsd</xsdPathWithinArtifact>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
+
 
   <repositories>
     <repository>
