@@ -10,7 +10,7 @@ import java.math.BigDecimal;
  */
 public class Feature {
     private BigDecimal durationInWeeks = BigDecimal.ZERO;
-    private CostOfDelayPerWeek costOfDelayPerWeek;
+    private BigDecimal costOfDelayPerWeek;
     private String name="";
     private DateTime costOfDelayStartDate;
     private DateTime costOfDelayEndDate;
@@ -19,28 +19,7 @@ public class Feature {
         this.durationInWeeks = durationInWeeks;
     }
 
-    public static class CostOfDelayPerWeek {
-        private BigDecimal cost = BigDecimal.ZERO;
 
-        public CostOfDelayPerWeek(BigDecimal cost) {
-            this.cost = cost;
-        }
-
-        public BigDecimal getCost() {
-            return cost;
-        }
-
-        public void setCost(BigDecimal cost) {
-            this.cost = cost;
-        }
-
-        @Override
-        public String toString() {
-            return "CostOfDelayPerWeek{" +
-                    "cost=" + cost +
-                    '}';
-        }
-    }
 
     public void setDurationInWeeks(String weeks){
         durationInWeeks = BigDecimal.valueOf(Long.valueOf((String)weeks));
@@ -54,11 +33,21 @@ public class Feature {
     public void setCostOfDelayStartDate(String startDate){
         costOfDelayStartDate = DateTime.parse(startDate, DateTimeFormat.forPattern("dd.MM.yyyy"));
     }
+
+    public void setCostOfDelayStartDate(DateTime startDate){
+        costOfDelayStartDate = startDate;
+    }
+
+
+    public void setCostOfDelayEndDate( DateTime endDate){
+        costOfDelayEndDate = endDate;
+    }
+
     public void setCostOfDelayEndDate( String endDate){
         costOfDelayEndDate = DateTime.parse(endDate, DateTimeFormat.forPattern("dd.MM.yyyy"));
     }
     public void setCostOfDelayPerWeek(String cod){
-        costOfDelayPerWeek = new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(Long.valueOf((String)cod)));
+        costOfDelayPerWeek = BigDecimal.valueOf(Long.valueOf((String)cod));
     }
 
     public BigDecimal getDurationInWeeks() {
@@ -69,11 +58,11 @@ public class Feature {
         this.durationInWeeks = durationInWeeks;
     }
 
-    public CostOfDelayPerWeek getCostOfDelayPerWeek() {
+    public BigDecimal getCostOfDelayPerWeek() {
         return costOfDelayPerWeek;
     }
 
-    public void setCostOfDelayPerWeek(CostOfDelayPerWeek costOfDelayPerWeek) {
+    public void setCostOfDelayPerWeek(BigDecimal costOfDelayPerWeek) {
         this.costOfDelayPerWeek = costOfDelayPerWeek;
     }
 
@@ -104,7 +93,7 @@ public class Feature {
     public BigDecimal calculateCD3(){
         if (durationInWeeks.compareTo(BigDecimal.ZERO)==0)
             return BigDecimal.ZERO;
-        return costOfDelayPerWeek.getCost().divide(durationInWeeks,BigDecimal.ROUND_HALF_UP);
+        return costOfDelayPerWeek.divide(durationInWeeks,BigDecimal.ROUND_HALF_UP);
     }
 
     @Override

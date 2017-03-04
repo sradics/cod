@@ -20,8 +20,7 @@ public class CostOfDelayDurationCalculatorImplUnitTest {
     public void setUp() throws Exception {
         duration10Weeks = BigDecimal.TEN;
         costOfDelayDurationCalculator = new CostOfDelayDurationCalculatorImpl();
-        feature = new FeatureBuilder().withCostOfDelayPerWeek(
-                new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(100))).withDurationInWeeks(
+        feature = new FeatureBuilder().withCostOfDelayPerWeek(BigDecimal.valueOf(100)).withDurationInWeeks(
                 duration10Weeks
         ).build();
 

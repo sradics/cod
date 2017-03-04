@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ComponentScan(excludeFilters={
-        @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value=FeatureSequenceGUI.class),
         @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value=App.class)})
 public class SequenceUnitTest {
 
@@ -47,12 +46,12 @@ public class SequenceUnitTest {
         Feature feature1 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.ONE)
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.TEN))
+                        .withCostOfDelayPerWeek(BigDecimal.TEN)
                 .build();
         Feature feature2 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.ONE)
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(200)))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(200))
                         .build();
 
         Feature[] result = sequencer.calculateSequence(Arrays.asList(new Feature[]{
@@ -67,24 +66,24 @@ public class SequenceUnitTest {
         Feature feature1 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.ONE)
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.TEN))
+                        .withCostOfDelayPerWeek(BigDecimal.TEN)
                         .build();
         Feature feature2 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.ONE)
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(200)))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(200))
                         .build();
 
         Feature feature3 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.ONE)
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(150)))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(150))
                         .build();
 
         Feature feature4 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.ONE)
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(8)))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(8))
                         .build();
 
         Feature[] result = sequencer.calculateSequence(Arrays.asList(new Feature[]{
@@ -103,14 +102,14 @@ public class SequenceUnitTest {
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.ONE)
                         .withName("A")
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(20)))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(20))
                         .withDurationAndCostOfDelayPeriod(BigDecimal.ONE,dt.plusWeeks(3),dt.plusWeeks(6))
                         .build();
         Feature feature2 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.ONE)
                         .withName("B")
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(12)))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(12))
                         .build();
         BigDecimal result = totalCostOfDelayCalculator.calculateTotalCostOfDelayForSequence(new Feature[]{feature1},dt);
         Feature[] resultSeq = sequencer.calculateSequence(Arrays.asList(new Feature[]{

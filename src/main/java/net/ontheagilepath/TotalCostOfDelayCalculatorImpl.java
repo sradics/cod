@@ -35,6 +35,6 @@ public class TotalCostOfDelayCalculatorImpl implements TotalCostOfDelayCalculato
         BigDecimal duration = featuresForSequenceCurrentTrial[indexDuration].getDurationInWeeks();
         long codDuration = costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration,codFeature).longValue();
 
-        return codFeature.getCostOfDelayPerWeek().getCost().multiply(BigDecimal.valueOf(codDuration));
+        return codFeature.getCostOfDelayPerWeek().multiply(BigDecimal.valueOf(codDuration));
     }
 }

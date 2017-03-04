@@ -31,12 +31,12 @@ public class TotalCostOfDelayCalculatorUnitTest {
         Feature feature1 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.valueOf(8))
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.TEN))
+                        .withCostOfDelayPerWeek(BigDecimal.TEN)
                         .build();
         Feature feature2 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.TEN)
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(200)))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(200))
                         .build();
         when(costOfDelayDurationCalculator.calculateDurationOverlap(any(), eq(BigDecimal.valueOf(8)), any())).thenReturn(BigDecimal.valueOf(8));
         when(costOfDelayDurationCalculator.calculateDurationOverlap(any(),eq(BigDecimal.valueOf(10)),any())).thenReturn(BigDecimal.valueOf(10));
@@ -48,7 +48,7 @@ public class TotalCostOfDelayCalculatorUnitTest {
         Feature feature1 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.valueOf(8))
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.TEN))
+                        .withCostOfDelayPerWeek(BigDecimal.TEN)
                         .build();
         when(costOfDelayDurationCalculator.calculateDurationOverlap(any(), eq(BigDecimal.valueOf(8)), any())).thenReturn(BigDecimal.valueOf(8));
 
@@ -60,17 +60,17 @@ public class TotalCostOfDelayCalculatorUnitTest {
         Feature feature1 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.valueOf(8))
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.TEN))
+                        .withCostOfDelayPerWeek(BigDecimal.TEN)
                         .build();
         Feature feature2 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.TEN)
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(200)))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(200))
                         .build();
         Feature feature3 =
                 new FeatureBuilder()
                         .withDurationInWeeks(BigDecimal.valueOf(2))
-                        .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(800)))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(800))
                         .build();
         when(costOfDelayDurationCalculator.calculateDurationOverlap(any(), eq(BigDecimal.valueOf(8)), any())).thenReturn(BigDecimal.valueOf(8));
         when(costOfDelayDurationCalculator.calculateDurationOverlap(any(), eq(BigDecimal.valueOf(10)), any())).thenReturn(BigDecimal.valueOf(10));

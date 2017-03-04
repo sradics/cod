@@ -9,7 +9,7 @@ import java.math.BigDecimal;
  */
 public class FeatureBuilder {
     private BigDecimal durationInWeeks = BigDecimal.ZERO;
-    private Feature.CostOfDelayPerWeek costOfDelayPerWeek;
+    private BigDecimal costOfDelayPerWeek;
     private String name = "";
     private DateTime costOfDelayStartDate;
     private DateTime costOfDelayEndDate;
@@ -33,7 +33,7 @@ public class FeatureBuilder {
     }
 
 
-    public FeatureBuilder withCostOfDelayPerWeek(Feature.CostOfDelayPerWeek costOfDelayPerWeek){
+    public FeatureBuilder withCostOfDelayPerWeek(BigDecimal costOfDelayPerWeek){
         this.costOfDelayPerWeek = costOfDelayPerWeek;
         return this;
     }

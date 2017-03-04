@@ -10,9 +10,8 @@ import static org.junit.Assert.assertEquals;
 public class FeatureUnitTest {
     @Test
     public void testCD3Calculation(){
-        Feature feature = new FeatureBuilder().withDurationInWeeks(BigDecimal.TEN).withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(
-                BigDecimal.valueOf(1000)
-        )).build();
+        Feature feature = new FeatureBuilder().withDurationInWeeks(BigDecimal.TEN).withCostOfDelayPerWeek(
+                BigDecimal.valueOf(1000)).build();
 
         assertEquals(BigDecimal.valueOf(100),feature.calculateCD3());
 
@@ -20,15 +19,13 @@ public class FeatureUnitTest {
 
     @Test
     public void testCD3CalculationZero(){
-        Feature feature = new FeatureBuilder().withDurationInWeeks(BigDecimal.ZERO).withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(
-                BigDecimal.valueOf(1000)
-        )).build();
+        Feature feature = new FeatureBuilder().withDurationInWeeks(BigDecimal.ZERO).withCostOfDelayPerWeek(
+                BigDecimal.valueOf(1000)).build();
 
         assertEquals(BigDecimal.valueOf(0),feature.calculateCD3());
 
-        feature = new FeatureBuilder().withDurationInWeeks(BigDecimal.ZERO).withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(
-                BigDecimal.valueOf(0)
-        )).build();
+        feature = new FeatureBuilder().withDurationInWeeks(BigDecimal.ZERO).withCostOfDelayPerWeek(
+                BigDecimal.valueOf(0)).build();
         assertEquals(BigDecimal.valueOf(0),feature.calculateCD3());
 
     }

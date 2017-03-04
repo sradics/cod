@@ -1,17 +1,15 @@
 package net.ontheagilepath;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by sebastianradics on 27.02.17.
  */
 public class FeatureSequenceModel {
-    private ArrayList<Feature> features = new ArrayList<Feature>();
+    private ObservableList<Feature> features = FXCollections.observableArrayList();
 
     public void addFeature(String name, String costOfDelayPerWeek, String durationInWeeks, String startWeek, String endWeek, String startDate, String endDate, String projectStart) {
         DateTime projectStartDate = DateTime.parse(projectStart, DateTimeFormat.forPattern("dd.MM.yyyy"));
@@ -37,8 +35,8 @@ public class FeatureSequenceModel {
         features.add(feature);
     }
 
-    public List<Feature> getFeatures(){
-        return Collections.unmodifiableList(features);
+    public ObservableList<Feature> getFeatures(){
+        return features;
     }
 
     public void clear(){

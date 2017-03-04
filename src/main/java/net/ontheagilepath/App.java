@@ -37,15 +37,15 @@ public class App
         return args -> {
             DateTime startDate = new DateTime(2017,1,1,12,00);
             Feature[] feature = {
-                    new FeatureBuilder().withName("A").withDurationInWeeks(BigDecimal.TEN).withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(5000))).build(),
+                    new FeatureBuilder().withName("A").withDurationInWeeks(BigDecimal.TEN).withCostOfDelayPerWeek(BigDecimal.valueOf(5000)).build(),
                     new FeatureBuilder().withName("B")
                             .withDurationInWeeks(BigDecimal.valueOf(5))
-                            .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(8000)))
+                            .withCostOfDelayPerWeek(BigDecimal.valueOf(8000))
                             .withDurationAndCostOfDelayPeriod(BigDecimal.valueOf(5),startDate.plusWeeks(4),startDate.plusWeeks(8))
                             .build(),
                     new FeatureBuilder().withName("C")
                             .withDurationInWeeks(BigDecimal.valueOf(5))
-                            .withCostOfDelayPerWeek(new Feature.CostOfDelayPerWeek(BigDecimal.valueOf(15000)))
+                            .withCostOfDelayPerWeek(BigDecimal.valueOf(15000))
                             .withDurationAndCostOfDelayPeriod(BigDecimal.valueOf(5),startDate.plusWeeks(3),startDate.plusWeeks(8))
                             .build(),
 
