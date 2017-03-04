@@ -1,0 +1,2 @@
+Opacity does not work in WebView
+new Array() does not work in WebView JavaScript

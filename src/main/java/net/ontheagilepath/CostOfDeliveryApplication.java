@@ -5,18 +5,23 @@ package net.ontheagilepath;/**
 import javafx.application.Application;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
+import javafx.concurrent.Worker.State;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.Font;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -38,9 +43,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -65,11 +68,15 @@ public class CostOfDeliveryApplication extends Application {
     private TextField featureBuildDuration;
     private Button addFeatureButton;
     private Button clearButton;
+    private Button showChartButton;
+    private Button showFeatureScreeButton;
     private Button calculateSequenceButton;
     private Button loadButton;
     private Button saveButton;
     private Label sequenceLabel;
     private TableView<Feature> featureTable;
+    private Scene mainScene;
+    private Stage stage;
 
     @Override
     public void start(Stage primaryStage) {
@@ -78,27 +85,122 @@ public class CostOfDeliveryApplication extends Application {
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        Scene scene = new Scene(grid, 900, 600);
+        mainScene = new Scene(grid, 900, 600);
 
         primaryStage.setTitle("Cost of Delivery Sequence Calculator");
+
+        addProjectStartDateInput(grid);
+
+        addFeatureNameInput(grid);
+        addCostOfDelayPerWeekInput(grid);
+        addCostOfDelayStartWeekInput(grid);
+        addCostOfDelayEndWeekInput(grid);
+        addCostOfDelayStartDateInput(grid);
+        addCostOfDelayEndDateInput(grid);
+        addFeatureBuildDurationInput(grid);
+
+        sequenceLabel = new Label("Sequence:");
+        grid.add(sequenceLabel, 3, 6,3,1);
+
+        addFeatureButton(grid);
+        addCalculateSequenceButton(grid);
+        addLoadButton(grid);
+        addSaveButton(grid);
+        addClearButton(grid);
+        addShowChartButton(grid);
+
+        addFeatureTable(grid);
+
+        primaryStage.setScene(mainScene);
+        stage = primaryStage;
+        primaryStage.show();
+
+
+    }
+
+    private void openChartView(Stage primaryStage){
+        Scene scene = new Scene(new Group());
+
+        FlowPane flow = new FlowPane();
+
+        final WebView browser = new WebView();
+        final WebEngine webEngine = browser.getEngine();
+
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(browser);
+
+        webEngine.getLoadWorker().stateProperty()
+                .addListener(new ChangeListener<State>() {
+                    @Override
+                    public void changed(ObservableValue ov, State oldState, State newState) {
+
+                        if (newState == Worker.State.SUCCEEDED) {
+                            primaryStage.setTitle(webEngine.getLocation());
+                        }
+
+                    }
+                });
+
+        InputStream is = getClass().getResourceAsStream("/test4.html");
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] data = new byte[10000];
+        while(true){
+            int bytesRead = 0;
+            try {
+                bytesRead = is.read(data);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if (bytesRead==-1)
+                break;
+            bos.write(data,0,bytesRead);
+        }
+        data = bos.toByteArray();
+        webEngine.setJavaScriptEnabled(true);
+
+        webEngine.loadContent(new String(data));
+        //webEngine.load("http://alignedleft.com/content/03-tutorials/01-d3/110-drawing-svgs/3.html");
+
+        //webEngine.load(getClass().getResource("/test4.html").toExternalForm());
+        flow.getChildren().add(scrollPane);
+        addShowFeatureScreenButton(flow);
+        scene.setRoot(flow);
+
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void openFeatureScreenView(Stage primaryStage){
+        primaryStage.setScene(mainScene);
+        primaryStage.show();
+    }
+
+    private void addProjectStartDateInput(GridPane grid) {
         Label projectStartDateLabel = new Label("Project Start Date:");
         grid.add(projectStartDateLabel, 0, 1);
 
         projectStartDate = new TextField();
         grid.add(projectStartDate, 1, 1);
+        projectStartDate.setText(new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
+    }
 
+    private void addFeatureNameInput(GridPane grid) {
         Label nameLabel = new Label("Name:");
         grid.add(nameLabel, 0, 2);
 
         name = new TextField();
         grid.add(name, 1, 2);
+    }
 
+    private void addCostOfDelayPerWeekInput(GridPane grid) {
         Label costOfDelayPerWeekLabel = new Label("Cost of Delay/Week:");
         grid.add(costOfDelayPerWeekLabel, 0, 3);
 
         costOfDelayPerWeek = new TextField();
         grid.add(costOfDelayPerWeek, 1, 3);
+    }
 
+    private void addCostOfDelayStartWeekInput(GridPane grid) {
         Label costOfDelayStartWeekLabel = new Label("CoD Start Week:");
         grid.add(costOfDelayStartWeekLabel, 3, 3);
 
@@ -119,10 +221,11 @@ public class CostOfDeliveryApplication extends Application {
             }
         });
         grid.add(costOfDelayStartWeek, 4, 3);
+    }
 
+    private void addCostOfDelayEndWeekInput(GridPane grid) {
         Label costOfDelayEndWeekLabel = new Label("CoD End Week:");
         grid.add(costOfDelayEndWeekLabel, 5, 3);
-
         costOfDelayEndWeek= new TextField();
         costOfDelayEndWeek.focusedProperty().addListener(new InvalidationListener() {
             @Override
@@ -140,43 +243,30 @@ public class CostOfDeliveryApplication extends Application {
             }
         });
         grid.add(costOfDelayEndWeek, 6, 3);
+    }
 
+    private void addCostOfDelayStartDateInput(GridPane grid) {
         Label costOfDelayStartDateLabel = new Label("CoD Start Date:");
         grid.add(costOfDelayStartDateLabel, 3, 4);
 
         costOfDelayStartDate= new TextField();
         grid.add(costOfDelayStartDate, 4, 4);
+    }
 
+    private void addCostOfDelayEndDateInput(GridPane grid) {
         Label costOfDelayEndDateLabel = new Label("CoD End Date:");
         grid.add(costOfDelayEndDateLabel, 5, 4);
 
         costOfDelayEndDate= new TextField();
         grid.add(costOfDelayEndDate, 6, 4);
+    }
 
+    private void addFeatureBuildDurationInput(GridPane grid) {
         Label featureBuildDurationLabel = new Label("Feature Dev Duration:");
         grid.add(featureBuildDurationLabel, 0, 5);
 
         featureBuildDuration= new TextField();
         grid.add(featureBuildDuration, 1, 5);
-
-        sequenceLabel = new Label("Sequence:");
-        grid.add(sequenceLabel, 3, 6,3,1);
-
-        addFeatureButton(grid);
-        addCalculateSequenceButton(grid);
-        addLoadButton(grid);
-        addSaveButton(grid);
-        addClearButton(grid);
-
-        addFeatureTable(grid);
-
-
-        projectStartDate.setText(new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
-
-        primaryStage.setScene(scene);
-        primaryStage.show();
-
-
     }
 
     private void addFeatureTable(GridPane grid) {
@@ -374,6 +464,38 @@ public class CostOfDeliveryApplication extends Application {
                 sequenceModel.clear();
                 SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
                 summarizer.clear();
+            }
+        });
+    }
+
+    private void addShowChartButton(GridPane grid) {
+        showChartButton = new Button("Show Chart");
+        HBox hbBtn = new HBox(10);
+        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.getChildren().add(showChartButton);
+        grid.add(hbBtn, 4, 7);
+
+        showChartButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent e) {
+                openChartView(stage);
+            }
+        });
+    }
+
+    private void addShowFeatureScreenButton(Pane pane) {
+        showFeatureScreeButton = new Button("Show Feature Screen");
+        HBox hbBtn = new HBox(10);
+        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.getChildren().add(showFeatureScreeButton);
+        pane.getChildren().add(hbBtn);
+
+        showFeatureScreeButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent e) {
+                openFeatureScreenView(stage);
             }
         });
     }
