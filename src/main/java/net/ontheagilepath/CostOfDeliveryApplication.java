@@ -29,6 +29,7 @@ import javafx.util.converter.BigDecimalStringConverter;
 import net.ontheagilepath.binding.FeatureListType;
 import net.ontheagilepath.binding.FeatureType;
 import net.ontheagilepath.binding.ObjectFactory;
+import net.ontheagilepath.graph.GraphDataBeanContainer;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -77,6 +78,7 @@ public class CostOfDeliveryApplication extends Application {
     private TableView<Feature> featureTable;
     private Scene mainScene;
     private Stage stage;
+    private Feature[] lastCalculatedSequence;
 
     @Override
     public void start(Stage primaryStage) {
@@ -129,13 +131,30 @@ public class CostOfDeliveryApplication extends Application {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(browser);
 
+        TotalCostOfDelayCalculator calculator = applicationContext.getBean(TotalCostOfDelayCalculator.class);
+        GraphDataBeanContainer container = calculator.calculateWeeklyCostOfDelayForSequence(lastCalculatedSequence,
+                DateTime.parse(projectStartDate.getText(),
+                        DateTimeFormat.forPattern("dd.MM.yyyy")));
+
         webEngine.getLoadWorker().stateProperty()
                 .addListener(new ChangeListener<State>() {
                     @Override
                     public void changed(ObservableValue ov, State oldState, State newState) {
+                        netscape.javascript.JSObject window = (netscape.javascript.JSObject) webEngine.executeScript("window");
+
+                        JavaBridge bridge = new JavaBridge();
+                        window.setMember("java", bridge);
+                        window.setMember("databeans",container);
+
+                        webEngine.executeScript("console.log = function(message)\n" +
+                                "{\n" +
+                                "    java.log(message);\n" +
+                                "};");
 
                         if (newState == Worker.State.SUCCEEDED) {
                             primaryStage.setTitle(webEngine.getLocation());
+                            //window = (netscape.javascript.JSObject) webEngine.executeScript("window");
+
                         }
 
                     }
@@ -568,6 +587,7 @@ public class CostOfDeliveryApplication extends Application {
                 summarizer.clear();
                 Feature[] featureSequence = applicationContext.getBean(Sequencer.class).calculateSequence(
                         sequenceModel.getFeatures(),startDate);
+                lastCalculatedSequence = featureSequence;
 
                 TotalCostOfDelayCalculator calculator = applicationContext.getBean(TotalCostOfDelayCalculator.class);
 

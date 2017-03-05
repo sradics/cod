@@ -5,6 +5,10 @@
     <title>D3 Demo: SVG with data</title>
     <script type="text/javascript" src="https://d3js.org/d3.v4.js"></script>
     <style type="text/css">
+	    svg rect {
+	        //opacity:0.5;
+	    }
+
 	    .xaxis text {
             font-family: sans-serif;
             font-size: 0px;
@@ -26,8 +30,23 @@
 
 </svg>
 <script type="text/javascript">
+console.log("testausgabe3");
 
-var weekData = [
+var dataBeans = databeans.getDataBeans();
+var weekData = [];
+for (i=0;i<dataBeans.length;i++){
+
+    weekData[i]={
+        "costOfDelay":Number(dataBeans[i].getCostOfDelay()),
+        "name":dataBeans[i].getName(),
+        "week":Number(dataBeans[i].getWeek())
+    };
+
+}
+
+if (weekData.length==0){  //init test array
+
+weekData = [
         {
             "costOfDelay":8000,
             "name":"A",
@@ -64,6 +83,8 @@ var weekData = [
             "week":6
         }
     ];
+
+}
 
 
     var mapWeeks = new Map();
@@ -157,6 +178,7 @@ var weekData = [
             return color;
         })
         .attr("stroke", "black")
+        //.attr("opacity",0.9)     //opacity is not working on MacOSx at the moment
         .attr("width", x(2))
         .attr("stroke-width", "1");
 

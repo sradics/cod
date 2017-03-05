@@ -1,5 +1,6 @@
 package net.ontheagilepath;
 
+import net.ontheagilepath.graph.GraphDataBeanContainer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -78,5 +79,28 @@ public class TotalCostOfDelayCalculatorUnitTest {
 
         assertEquals(BigDecimal.valueOf(10*8+200*8+800*8+200*10+800*10+800*2),
                 totalCostOfDelayCalculator.calculateTotalCostOfDelayForSequence(new Feature[]{feature1,feature2,feature3}, null));
+    }
+
+
+    @Test
+    public void testCalculateWeeklyCostOfDelayForSequence(){
+        Feature feature1 =
+                new FeatureBuilder()
+                        .withDurationInWeeks(BigDecimal.valueOf(2))
+                        .withCostOfDelayPerWeek(BigDecimal.TEN)
+                        .withName("A")
+                        .build();
+        Feature feature2 =
+                new FeatureBuilder()
+                        .withDurationInWeeks(BigDecimal.valueOf(3))
+                        .withCostOfDelayPerWeek(BigDecimal.valueOf(200))
+                        .withName("B")
+                        .build();
+        when(costOfDelayDurationCalculator.calculateDurationOverlap(any(), eq(BigDecimal.valueOf(2)), any())).thenReturn(BigDecimal.valueOf(2));
+        when(costOfDelayDurationCalculator.calculateDurationOverlap(any(),eq(BigDecimal.valueOf(3)),any())).thenReturn(BigDecimal.valueOf(3));
+
+        GraphDataBeanContainer databeans = totalCostOfDelayCalculator.calculateWeeklyCostOfDelayForSequence(new Feature[]{feature1,feature2}, null);
+        assertEquals(6,databeans.getDataBeans().length);
+        //assertEquals(BigDecimal.valueOf(10*8+200*8+200*10),totalCostOfDelayCalculator.calculateTotalCostOfDelayForSequence(new Feature[]{feature1,feature2}, null));
     }
 }
