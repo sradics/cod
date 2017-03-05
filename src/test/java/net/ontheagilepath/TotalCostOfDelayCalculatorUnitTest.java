@@ -100,7 +100,7 @@ public class TotalCostOfDelayCalculatorUnitTest {
         when(costOfDelayDurationCalculator.calculateDurationOverlap(any(),eq(BigDecimal.valueOf(3)),any())).thenReturn(BigDecimal.valueOf(3));
 
         GraphDataBeanContainer databeans = totalCostOfDelayCalculator.calculateWeeklyCostOfDelayForSequence(new Feature[]{feature1,feature2}, null);
-        assertEquals(6,databeans.getDataBeans().length);
+        assertEquals(7,databeans.getDataBeans().length);
         //assertEquals(BigDecimal.valueOf(10*8+200*8+200*10),totalCostOfDelayCalculator.calculateTotalCostOfDelayForSequence(new Feature[]{feature1,feature2}, null));
     }
 }

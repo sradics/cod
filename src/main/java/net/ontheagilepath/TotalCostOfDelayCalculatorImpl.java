@@ -41,10 +41,10 @@ public class TotalCostOfDelayCalculatorImpl implements TotalCostOfDelayCalculato
             return graphDataBeanContainer;
         int weeks = 0;
         for (int i = 0; i < featuresForSequenceCurrentTrial.length; i++) {
-            addCalculateCostOfDelayForDuration(weeks,graphDataBeanContainer,featuresForSequenceCurrentTrial,i,i,startDate);
+            addCalculateCostOfDelayForDuration(featuresForSequenceCurrentTrial[i],weeks,graphDataBeanContainer,featuresForSequenceCurrentTrial,i,i,startDate);
 
             for (int j=i+1;j<featuresForSequenceCurrentTrial.length;j++){
-                addCalculateCostOfDelayForDuration(weeks,graphDataBeanContainer,featuresForSequenceCurrentTrial,j,i,startDate);
+                addCalculateCostOfDelayForDuration(featuresForSequenceCurrentTrial[i],weeks,graphDataBeanContainer,featuresForSequenceCurrentTrial,j,i,startDate);
             }
             startDate=startDate.plusWeeks(featuresForSequenceCurrentTrial[i].getDurationInWeeks().intValue());
             weeks+=featuresForSequenceCurrentTrial[i].getDurationInWeeks().intValue();
@@ -52,15 +52,20 @@ public class TotalCostOfDelayCalculatorImpl implements TotalCostOfDelayCalculato
         return graphDataBeanContainer;
     }
 
-    private void addCalculateCostOfDelayForDuration(int weeks,GraphDataBeanContainer graphDataBeanContainer,Feature[] featuresForSequenceCurrentTrial,int indexCod, int indexDuration, DateTime startDate){
+    private void addCalculateCostOfDelayForDuration(Feature currentFeatureInProgress, int weeks,GraphDataBeanContainer graphDataBeanContainer,Feature[] featuresForSequenceCurrentTrial,int indexCod, int indexDuration, DateTime startDate){
         Feature codFeature = featuresForSequenceCurrentTrial[indexCod];
         BigDecimal duration = featuresForSequenceCurrentTrial[indexDuration].getDurationInWeeks();
-        int codDuration = costOfDelayDurationCalculator.calculateDurationOverlap(startDate,duration,codFeature).intValue();
+        int codDuration = costOfDelayDurationCalculator.calculateDurationOverlap(startDate, duration, codFeature).intValue();
+        int codOverlap = codDuration;
+        if (currentFeatureInProgress==codFeature && codDuration==0) {
+            codDuration = duration.intValue();
+            codOverlap = 0;
+        }
         for (int i=0;i<codDuration;i++){
             graphDataBeanContainer.addDataBean(new GraphDataBean(
-                    codFeature.getCostOfDelayPerWeek().toString(),
+                    codOverlap>i?codFeature.getCostOfDelayPerWeek().toString():"0",
                     codFeature.getName(),
-                    String.valueOf(weeks+i+1)));
+                    String.valueOf(weeks+i+1) ,currentFeatureInProgress.getName()));
         }
     }
 

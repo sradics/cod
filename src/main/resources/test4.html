@@ -26,62 +26,171 @@
 	</style>
 </head>
 <body>
-<svg width="550" height="220">
+<svg width="550" height="250">
 
 </svg>
 <script type="text/javascript">
-console.log("testausgabe3");
 
-var dataBeans = databeans.getDataBeans();
 var weekData = [];
+
+console.log("testausgabe3");
+var dataBeans = databeans.getDataBeans();
+
 for (i=0;i<dataBeans.length;i++){
 
     weekData[i]={
         "costOfDelay":Number(dataBeans[i].getCostOfDelay()),
         "name":dataBeans[i].getName(),
-        "week":Number(dataBeans[i].getWeek())
+        "week":Number(dataBeans[i].getWeek()),
+        "currentFeatureInProgress":dataBeans[i].getCurrentFeatureName()
     };
 
 }
 
+for (i=0;i<weekData.length;i++){
+    console.log("{\n   \"costOfDelay\":"+weekData[i].costOfDelay+
+    ",\n   \"name\":\""+weekData[i].name+"\",\n   "+
+    "\"week\":"+weekData[i].week+",\n   "+
+    "\"currentFeatureInProgress\":\""+weekData[i].currentFeatureInProgress+"\""
+    +"\n},");
+}
+
+
 if (weekData.length==0){  //init test array
 
 weekData = [
-        {
-            "costOfDelay":8000,
-            "name":"A",
-            "week":1
-        },
-        {
-            "costOfDelay":40000,
-            "name":"C",
-            "week":1
-        },
-        {
-            "costOfDelay":8000,
-            "name":"B",
-            "week":2
-        },
-        {
-            "costOfDelay":5000,
-            "name":"D",
-            "week":3
-        },
-        {
-            "costOfDelay":6000,
-            "name":"A",
-            "week":4
-        },
-        {
-            "costOfDelay":6000,
-            "name":"C",
-            "week":4
-        },
-        {
-            "costOfDelay":12000,
-            "name":"F",
-            "week":6
-        }
+{
+   "costOfDelay":6000,
+   "name":"C",
+   "week":1,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":6000,
+   "name":"C",
+   "week":2,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":1,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":2,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":1,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":2,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":3,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":4,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":5,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":3,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":4,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":5,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":8000,
+   "name":"D",
+   "week":3,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":5000,
+   "name":"E",
+   "week":3,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":6,
+   "currentFeatureInProgress":"B"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":7,
+   "currentFeatureInProgress":"B"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":8,
+   "currentFeatureInProgress":"B"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":9,
+   "currentFeatureInProgress":"B"
+},
+{
+   "costOfDelay":0,
+   "name":"D",
+   "week":10,
+   "currentFeatureInProgress":"D"
+},
+{
+   "costOfDelay":0,
+   "name":"E",
+   "week":11,
+   "currentFeatureInProgress":"E"
+},
+{
+   "costOfDelay":0,
+   "name":"E",
+   "week":12,
+   "currentFeatureInProgress":"E"
+},
+{
+   "costOfDelay":0,
+   "name":"E",
+   "week":13,
+   "currentFeatureInProgress":"E"
+}
     ];
 
 }
@@ -182,7 +291,7 @@ weekData = [
         .attr("width", x(2))
         .attr("stroke-width", "1");
 
-        totalCostOfDelayPeerWeek = [];
+    totalCostOfDelayPeerWeek = [];
     d3.select("svg").selectAll("text")
         .data(weekData)
         .enter()
@@ -204,19 +313,38 @@ weekData = [
         .attr("font-size", "11px")
         .attr("fill", "black")
         .text(function(d) {
-			   		return d.costOfDelay;
+			   		return d.name+"("+d.costOfDelay+")";
 			   });
 
 
-			   d3.select("svg").append("g")
-    .attr("transform", "translate(0,200)")
-    .attr("class", "xaxis")
-    .call(xAxis);
+    totalCostOfDelayPeerWeek = [];
+    d3.select("svg").selectAll("text")
+        .data(weekData,function(d){return null;})
+        .enter()
+        .append("text")
+        .attr("x", function(d,i) {
+            return x(d.week)+x(2)/2;
+        })
+        .attr("y", function(d,i) {
+            return 240;
+        })
+        .attr("text-anchor", "middle")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "12px")
+        .attr("fill", "black")
+        .text(function(d) {
+			   		return d.currentFeatureInProgress;
+			   });
 
     d3.select("svg").append("g")
-    .attr("transform", "translate("+x(2)/2+",200)")
-    .attr("class", "xaxisNumbers")
-    .call(xAxisNumbers);
+        .attr("transform", "translate(0,200)")
+        .attr("class", "xaxis")
+        .call(xAxis);
+
+    d3.select("svg").append("g")
+        .attr("transform", "translate("+x(2)/2+",200)")
+        .attr("class", "xaxisNumbers")
+        .call(xAxisNumbers);
 
 		</script>
 </body>

@@ -7,11 +7,13 @@ public class GraphDataBean {
     private String costOfDelay;
     private String name;
     private String week;
+    private String currentFeatureName;
 
-    public GraphDataBean(String costOfDelay, String name, String week) {
+    public GraphDataBean(String costOfDelay, String name, String week, String currentFeatureName) {
         this.costOfDelay = costOfDelay;
         this.name = name;
         this.week = week;
+        this.currentFeatureName = currentFeatureName;
     }
 
     public GraphDataBean() {
@@ -39,5 +41,13 @@ public class GraphDataBean {
 
     public void setWeek(String week) {
         this.week = week;
+    }
+
+    public String getCurrentFeatureName() {
+        return currentFeatureName;
+    }
+
+    public void setCurrentFeatureName(String currentFeatureName) {
+        this.currentFeatureName = currentFeatureName;
     }
 }

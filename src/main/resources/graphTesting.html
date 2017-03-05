@@ -5,6 +5,10 @@
     <title>D3 Demo: SVG with data</title>
     <script type="text/javascript" src="https://d3js.org/d3.v4.js"></script>
     <style type="text/css">
+	    svg rect {
+	        //opacity:0.5;
+	    }
+
 	    .xaxis text {
             font-family: sans-serif;
             font-size: 0px;
@@ -22,49 +26,162 @@
 	</style>
 </head>
 <body>
-<svg width="550" height="220">
+<svg width="800" height="250">
 
 </svg>
 <script type="text/javascript">
 
-var weekData = [
-        {
-            "costOfDelay":8000,
-            "name":"A",
-            "week":1
-        },
-        {
-            "costOfDelay":40000,
-            "name":"C",
-            "week":1
-        },
-        {
-            "costOfDelay":8000,
-            "name":"B",
-            "week":2
-        },
-        {
-            "costOfDelay":5000,
-            "name":"D",
-            "week":3
-        },
-        {
-            "costOfDelay":6000,
-            "name":"A",
-            "week":4
-        },
-        {
-            "costOfDelay":6000,
-            "name":"C",
-            "week":4
-        },
-        {
-            "costOfDelay":12000,
-            "name":"F",
-            "week":6
-        }
+var weekData = [];
+
+
+
+if (weekData.length==0){  //init test array
+
+weekData = [
+{
+   "costOfDelay":6000,
+   "name":"C",
+   "week":1,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":6000,
+   "name":"C",
+   "week":2,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":1,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":2,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":1000,
+   "name":"B",
+   "week":1,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":2,
+   "currentFeatureInProgress":"C"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":3,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":4,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":5000,
+   "name":"A",
+   "week":5,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":3,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":4,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":5,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":8000,
+   "name":"D",
+   "week":3,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":5000,
+   "name":"E",
+   "week":3,
+   "currentFeatureInProgress":"A"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":6,
+   "currentFeatureInProgress":"B"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":7,
+   "currentFeatureInProgress":"B"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":8,
+   "currentFeatureInProgress":"B"
+},
+{
+   "costOfDelay":2000,
+   "name":"B",
+   "week":9,
+   "currentFeatureInProgress":"B"
+},
+{
+   "costOfDelay":0,
+   "name":"D",
+   "week":10,
+   "currentFeatureInProgress":"D"
+},
+{
+   "costOfDelay":0,
+   "name":"E",
+   "week":11,
+   "currentFeatureInProgress":"E"
+},
+{
+   "costOfDelay":0,
+   "name":"E",
+   "week":12,
+   "currentFeatureInProgress":"E"
+},
+{
+   "costOfDelay":0,
+   "name":"E",
+   "week":13,
+   "currentFeatureInProgress":"E"
+}
     ];
 
+}
+
+function getTextWidth(text, font) {
+    // re-use canvas object for better performance
+    var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+    var context = canvas.getContext("2d");
+    context.font = font;
+    var metrics = context.measureText(text);
+    return metrics.width;
+    }
 
     var mapWeeks = new Map();
     var totalMax = 0;
@@ -89,7 +206,7 @@ var weekData = [
         }
     }
 
-    var canvasWidth=500;
+    var canvasWidth=400;
     var width = 50;
     var height = 200;
     var totalCostOfDelayPeerWeek = [];
@@ -125,7 +242,7 @@ var weekData = [
     ])
     .range([0,height]);
 
-    d3.select("svg").selectAll("rect")
+    var node = d3.select("svg").selectAll("rect")
         .data(weekData)
         .enter()
         .append("rect")
@@ -157,10 +274,11 @@ var weekData = [
             return color;
         })
         .attr("stroke", "black")
+        //.attr("opacity",0.9)     //opacity is not working on MacOSx at the moment
         .attr("width", x(2))
         .attr("stroke-width", "1");
 
-        totalCostOfDelayPeerWeek = [];
+    totalCostOfDelayPeerWeek = [];
     d3.select("svg").selectAll("text")
         .data(weekData)
         .enter()
@@ -175,26 +293,81 @@ var weekData = [
             }else{
                 totalCostOfDelayPeerWeek[d.week]=totalCostOfDelayPeerWeek[d.week]+d.costOfDelay;
             }
-            return height-y((totalCostOfDelayPeerWeek[d.week]))+15;
+            text = d.name+"("+d.costOfDelay+")";
+            textSize = Math.min(11,y(d.costOfDelay)-2);
+            if (textSize<6) {
+                textSize=6;
+            }
+            yPos = height-y((totalCostOfDelayPeerWeek[d.week]))+textSize;
+
+            if (height-yPos<5){
+                yPos = height-5;
+            }
+            return yPos;
         })
         .attr("text-anchor", "middle")
         .attr("font-family", "sans-serif")
-        .attr("font-size", "11px")
+        .attr("font-size", function(d) {
+            text = d.name+"("+d.costOfDelay+")";
+            textSize = Math.min(11,y(d.costOfDelay)-2);
+            maxTextWidth=x(2);
+            counter=0;
+            while(true){
+                currentWidth=getTextWidth(text, "normal "+textSize+"px sans-serif");
+                if (currentWidth>maxTextWidth){
+                    textSize=textSize-1;
+                    console.log("reduce textSize from:"+(textSize+1)+" to: "+textSize+" currentWidth:"+currentWidth+
+                        " maxWidth:"+maxTextWidth+" counter:"+counter);
+                    counter++;
+                }else{
+                    break;
+                }
+                if (counter>5 ||textSize<=6){
+                    break;
+                }
+            }
+            if (textSize<6) {
+                textSize=6;
+            }
+            console.log(getTextWidth(text, "normal "+textSize+"px sans-serif"));
+            console.log(text+":"+text.length+" size:"+textSize+" height:"+y(d.costOfDelay)+" maxWidth:"+maxTextWidth)  ;
+            return textSize + "px"; })
         .attr("fill", "black")
         .text(function(d) {
-			   		return d.costOfDelay;
+			   		return d.name+"("+d.costOfDelay+")";
 			   });
 
 
-			   d3.select("svg").append("g")
-    .attr("transform", "translate(0,200)")
-    .attr("class", "xaxis")
-    .call(xAxis);
+
+	totalCostOfDelayPeerWeek = [];
+    d3.select("svg").selectAll("text")
+        .data(weekData,function(d){return null;})
+        .enter()
+        .append("text")
+        .attr("x", function(d,i) {
+            return x(d.week)+x(2)/2;
+        })
+        .attr("y", function(d,i) {
+            return 240;
+        })
+        .attr("text-anchor", "middle")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "12px")
+        .attr("fill", "black")
+        .text(function(d) {
+			   		return d.currentFeatureInProgress;
+			   });
+
 
     d3.select("svg").append("g")
-    .attr("transform", "translate("+x(2)/2+",200)")
-    .attr("class", "xaxisNumbers")
-    .call(xAxisNumbers);
+        .attr("transform", "translate(0,200)")
+        .attr("class", "xaxis")
+        .call(xAxis);
+
+    d3.select("svg").append("g")
+        .attr("transform", "translate("+x(2)/2+",200)")
+        .attr("class", "xaxisNumbers")
+        .call(xAxisNumbers);
 
 		</script>
 </body>
