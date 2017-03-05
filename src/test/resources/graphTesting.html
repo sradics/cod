@@ -4,13 +4,18 @@
     <meta charset="utf-8">
     <title>D3 Demo: SVG with data</title>
     <script type="text/javascript" src="https://d3js.org/d3.v4.js"></script>
-    <script src="scripts.js" type="text/javascript"></script>
-    <style type="text/css">
-	    svg rect {
-	        //opacity:0.5;
-	    }
+    <script type="text/javascript" src="scripts.js"></script>
 
-	    .xaxis text {
+    <script type="text/javascript">
+        //placeholder__
+    </script>
+
+    <style type="text/css">
+        svg rect {
+        //opacity:0.5;
+        }
+
+        .xaxis text {
             font-family: sans-serif;
             font-size: 0px;
         }
@@ -24,159 +29,156 @@
             fill: none;
             stroke-width: 0px;
         }
-	</style>
+    </style>
 </head>
 <body>
-<svg width="800" height="250">
+<svg width="550" height="250">
 
 </svg>
-
-
-
 <script type="text/javascript">
 
-var weekData = [];
+    var weekData = [];
 
+    //do_not_delete_initWebView_placeholder__
 
+    if (weekData.length==0){  //init test array
 
-if (weekData.length==0){  //init test array
+        weekData = [
+            {
+                "costOfDelay":6000,
+                "name":"C",
+                "week":1,
+                "currentFeatureInProgress":"C"
+            },
+            {
+                "costOfDelay":6000,
+                "name":"C",
+                "week":2,
+                "currentFeatureInProgress":"C"
+            },
+            {
+                "costOfDelay":5000,
+                "name":"A",
+                "week":1,
+                "currentFeatureInProgress":"C"
+            },
+            {
+                "costOfDelay":5000,
+                "name":"A",
+                "week":2,
+                "currentFeatureInProgress":"C"
+            },
+            {
+                "costOfDelay":2000,
+                "name":"B",
+                "week":1,
+                "currentFeatureInProgress":"C"
+            },
+            {
+                "costOfDelay":2000,
+                "name":"B",
+                "week":2,
+                "currentFeatureInProgress":"C"
+            },
+            {
+                "costOfDelay":5000,
+                "name":"A",
+                "week":3,
+                "currentFeatureInProgress":"A"
+            },
+            {
+                "costOfDelay":5000,
+                "name":"A",
+                "week":4,
+                "currentFeatureInProgress":"A"
+            },
+            {
+                "costOfDelay":5000,
+                "name":"A",
+                "week":5,
+                "currentFeatureInProgress":"A"
+            },
+            {
+                "costOfDelay":2000,
+                "name":"B",
+                "week":3,
+                "currentFeatureInProgress":"A"
+            },
+            {
+                "costOfDelay":2000,
+                "name":"B",
+                "week":4,
+                "currentFeatureInProgress":"A"
+            },
+            {
+                "costOfDelay":2000,
+                "name":"B",
+                "week":5,
+                "currentFeatureInProgress":"A"
+            },
+            {
+                "costOfDelay":8000,
+                "name":"D",
+                "week":3,
+                "currentFeatureInProgress":"A"
+            },
+            {
+                "costOfDelay":5000,
+                "name":"E",
+                "week":3,
+                "currentFeatureInProgress":"A"
+            },
+            {
+                "costOfDelay":2000,
+                "name":"B",
+                "week":6,
+                "currentFeatureInProgress":"B"
+            },
+            {
+                "costOfDelay":2000,
+                "name":"B",
+                "week":7,
+                "currentFeatureInProgress":"B"
+            },
+            {
+                "costOfDelay":2000,
+                "name":"B",
+                "week":8,
+                "currentFeatureInProgress":"B"
+            },
+            {
+                "costOfDelay":2000,
+                "name":"B",
+                "week":9,
+                "currentFeatureInProgress":"B"
+            },
+            {
+                "costOfDelay":0,
+                "name":"D",
+                "week":10,
+                "currentFeatureInProgress":"D"
+            },
+            {
+                "costOfDelay":0,
+                "name":"E",
+                "week":11,
+                "currentFeatureInProgress":"E"
+            },
+            {
+                "costOfDelay":0,
+                "name":"E",
+                "week":12,
+                "currentFeatureInProgress":"E"
+            },
+            {
+                "costOfDelay":0,
+                "name":"E",
+                "week":13,
+                "currentFeatureInProgress":"E"
+            }
+        ];
 
-weekData = [
-{
-   "costOfDelay":6000,
-   "name":"C",
-   "week":1,
-   "currentFeatureInProgress":"C"
-},
-{
-   "costOfDelay":6000,
-   "name":"C",
-   "week":2,
-   "currentFeatureInProgress":"C"
-},
-{
-   "costOfDelay":5000,
-   "name":"A",
-   "week":1,
-   "currentFeatureInProgress":"C"
-},
-{
-   "costOfDelay":5000,
-   "name":"A",
-   "week":2,
-   "currentFeatureInProgress":"C"
-},
-{
-   "costOfDelay":1000,
-   "name":"B",
-   "week":1,
-   "currentFeatureInProgress":"C"
-},
-{
-   "costOfDelay":2000,
-   "name":"B",
-   "week":2,
-   "currentFeatureInProgress":"C"
-},
-{
-   "costOfDelay":5000,
-   "name":"A",
-   "week":3,
-   "currentFeatureInProgress":"A"
-},
-{
-   "costOfDelay":5000,
-   "name":"A",
-   "week":4,
-   "currentFeatureInProgress":"A"
-},
-{
-   "costOfDelay":5000,
-   "name":"A",
-   "week":5,
-   "currentFeatureInProgress":"A"
-},
-{
-   "costOfDelay":2000,
-   "name":"B",
-   "week":3,
-   "currentFeatureInProgress":"A"
-},
-{
-   "costOfDelay":2000,
-   "name":"B",
-   "week":4,
-   "currentFeatureInProgress":"A"
-},
-{
-   "costOfDelay":2000,
-   "name":"B",
-   "week":5,
-   "currentFeatureInProgress":"A"
-},
-{
-   "costOfDelay":8000,
-   "name":"D",
-   "week":3,
-   "currentFeatureInProgress":"A"
-},
-{
-   "costOfDelay":5000,
-   "name":"E",
-   "week":3,
-   "currentFeatureInProgress":"A"
-},
-{
-   "costOfDelay":2000,
-   "name":"B",
-   "week":6,
-   "currentFeatureInProgress":"B"
-},
-{
-   "costOfDelay":2000,
-   "name":"B",
-   "week":7,
-   "currentFeatureInProgress":"B"
-},
-{
-   "costOfDelay":2000,
-   "name":"B",
-   "week":8,
-   "currentFeatureInProgress":"B"
-},
-{
-   "costOfDelay":2000,
-   "name":"B",
-   "week":9,
-   "currentFeatureInProgress":"B"
-},
-{
-   "costOfDelay":0,
-   "name":"D",
-   "week":10,
-   "currentFeatureInProgress":"D"
-},
-{
-   "costOfDelay":0,
-   "name":"E",
-   "week":11,
-   "currentFeatureInProgress":"E"
-},
-{
-   "costOfDelay":0,
-   "name":"E",
-   "week":12,
-   "currentFeatureInProgress":"E"
-},
-{
-   "costOfDelay":0,
-   "name":"E",
-   "week":13,
-   "currentFeatureInProgress":"E"
-}
-    ];
-
-}
+    }
 
 
     var mapWeeks = new Map();
@@ -202,7 +204,7 @@ weekData = [
         }
     }
 
-    var canvasWidth=400;
+    var canvasWidth=500;
     var width = 50;
     var height = 200;
     var totalCostOfDelayPeerWeek = [];
@@ -212,13 +214,13 @@ weekData = [
     var defaultColor="#AAAAAA";
 
     var x = d3.scaleLinear()
-    .domain([
-        1,
-        d3.max(weekData, function(d) {
-            return d.week;
-        })+1
-    ])
-    .range([0,canvasWidth]);
+        .domain([
+            1,
+            d3.max(weekData, function(d) {
+                return d.week;
+            })+1
+        ])
+        .range([0,canvasWidth]);
 
     //var xAxisTickValues = Array.from(mapWeeks.keys());
 
@@ -233,12 +235,12 @@ weekData = [
     xAxisNumbers.tickPadding(10);
 
     var y = d3.scaleLinear()
-    .domain([
-        0,totalMax
-    ])
-    .range([0,height]);
+        .domain([
+            0,totalMax
+        ])
+        .range([0,height]);
 
-    var node = d3.select("svg").selectAll("rect")
+    d3.select("svg").selectAll("rect")
         .data(weekData)
         .enter()
         .append("rect")
@@ -289,11 +291,7 @@ weekData = [
             }else{
                 totalCostOfDelayPeerWeek[d.week]=totalCostOfDelayPeerWeek[d.week]+d.costOfDelay;
             }
-            text = d.name+"("+d.costOfDelay+")";
-            textSize = Math.min(11,y(d.costOfDelay)-2);
-            if (textSize<6) {
-                textSize=6;
-            }
+            textSize=getTextSize(d.name+"("+d.costOfDelay+")",y(d.costOfDelay),x(2));
             yPos = height-y((totalCostOfDelayPeerWeek[d.week]))+textSize;
 
             if (height-yPos<5){
@@ -304,38 +302,16 @@ weekData = [
         .attr("text-anchor", "middle")
         .attr("font-family", "sans-serif")
         .attr("font-size", function(d) {
-            text = d.name+"("+d.costOfDelay+")";
-            textSize = Math.min(11,y(d.costOfDelay)-2);
-            maxTextWidth=x(2);
-            counter=0;
-            while(true){
-                currentWidth=getTextWidth(text, "normal "+textSize+"px sans-serif");
-                if (currentWidth>maxTextWidth){
-                    textSize=textSize-1;
-                    console.log("reduce textSize from:"+(textSize+1)+" to: "+textSize+" currentWidth:"+currentWidth+
-                        " maxWidth:"+maxTextWidth+" counter:"+counter);
-                    counter++;
-                }else{
-                    break;
-                }
-                if (counter>5 ||textSize<=6){
-                    break;
-                }
-            }
-            if (textSize<6) {
-                textSize=6;
-            }
-            console.log(getTextWidth(text, "normal "+textSize+"px sans-serif"));
-            console.log(text+":"+text.length+" size:"+textSize+" height:"+y(d.costOfDelay)+" maxWidth:"+maxTextWidth)  ;
+            textSize=getTextSize(d.name+"("+d.costOfDelay+")",y(d.costOfDelay),x(2));
             return textSize + "px"; })
         .attr("fill", "black")
         .text(function(d) {
-			   		return d.name+"("+d.costOfDelay+")";
-			   });
+            return d.name+"("+d.costOfDelay+")";
+        });
 
 
 
-	totalCostOfDelayPeerWeek = [];
+    totalCostOfDelayPeerWeek = [];
     d3.select("svg").selectAll("text")
         .data(weekData,function(d){return null;})
         .enter()
@@ -351,9 +327,8 @@ weekData = [
         .attr("font-size", "12px")
         .attr("fill", "black")
         .text(function(d) {
-			   		return d.currentFeatureInProgress;
-			   });
-
+            return d.currentFeatureInProgress;
+        });
 
     d3.select("svg").append("g")
         .attr("transform", "translate(0,200)")
@@ -365,6 +340,6 @@ weekData = [
         .attr("class", "xaxisNumbers")
         .call(xAxisNumbers);
 
-		</script>
+</script>
 </body>
 </html>

@@ -185,6 +185,10 @@ public class CostOfDeliveryApplication extends Application {
     private String injectJavaScript(String chartView) {
         String javaScriptToInject = FileUtil.loadFileToString(getClass(),"/scripts.js");
         chartView = chartView.replace("//placeholder__",javaScriptToInject);
+
+        javaScriptToInject = FileUtil.loadFileToString(getClass(),"/initWebView.js");
+        chartView = chartView.replace("//do_not_delete_initWebView_placeholder__",javaScriptToInject);
+
         return chartView;
     }
 
