@@ -32,7 +32,7 @@
     </style>
 </head>
 <body>
-<svg width="750" height="300">
+<svg width="750" height="350">
 
 </svg>
 <script type="text/javascript">
@@ -185,7 +185,9 @@
     var totalMax = 0;
     var canvasWidth=d3.select("svg").attr("width")-50;
     var width = 50;
-    var height = d3.select("svg").attr("height")-50;
+    var topPadding = 20;
+    var height = d3.select("svg").attr("height")-50-topPadding;
+    var leftPadding = 50;
     var colors = ["green","blue","cyan","purple","red","lime","#996633","Fuchsia","#99ff33"]
     var defaultColor="#AAAAAA";
 
@@ -237,6 +239,16 @@
         ])
         .range([0,height]);
 
+    var yReverse = d3.scaleLinear()
+        .domain([
+            0,totalMax
+        ])
+        .range([height,0]);
+
+    var yAxis =  d3.axisLeft(yReverse);
+    //yAxis.tickValues([3000,2000,1000]);
+    yAxis.tickFormat(d3.format(",.0f"));
+
 
     function getNewTotalCost(d){
         toc = totalCostOfDelayPeerWeek[d.week];
@@ -256,10 +268,10 @@
         .enter()
         .append("rect")
         .attr("x", function(d,i) {
-            return x(d.week);
+            return x(d.week)+leftPadding;
         })
         .attr("y", function(d,i) {
-            return height-y(getNewTotalCost(d));
+            return height-y(getNewTotalCost(d))+topPadding;
         })
         .attr("height", function(d, i) {
             return y(d.costOfDelay);
@@ -287,7 +299,7 @@
         .enter()
         .append("text")
         .attr("x", function(d,i) {
-            return x(d.week)+x(2)/2;
+            return x(d.week)+x(2)/2+leftPadding;
         })
         .attr("y", function(d,i) {
             textSize=getTextSize(d.name+"("+d.costOfDelay+")",y(d.costOfDelay),x(2));
@@ -296,7 +308,7 @@
             if (height-yPos<5){
                 yPos = height-5;
             }
-            return yPos;
+            return yPos+topPadding;
         })
         .attr("text-anchor", "middle")
         .attr("font-family", "sans-serif")
@@ -314,10 +326,10 @@
         .enter()
         .append("text")
         .attr("x", function(d,i) {
-            return x(d.week)+x(2)/2;
+            return x(d.week)+x(2)/2+leftPadding;
         })
         .attr("y", function(d,i) {
-            return height+40;
+            return height+40+topPadding;
         })
         .attr("text-anchor", "middle")
         .attr("font-family", "sans-serif")
@@ -328,14 +340,19 @@
         });
 
     d3.select("svg").append("g")
-        .attr("transform", "translate(0,"+height+")")
+        .attr("transform", "translate("+leftPadding+","+(height+topPadding)+")")
         .attr("class", "xaxis")
         .call(xAxis);
 
     d3.select("svg").append("g")
-        .attr("transform", "translate("+x(2)/2+","+height+")")
+        .attr("transform", "translate("+(x(2)/2+leftPadding)+","+(height+topPadding)+")")
         .attr("class", "xaxisNumbers")
         .call(xAxisNumbers);
+
+    d3.select("svg").append("g")
+        .attr("transform", "translate("+leftPadding+","+topPadding+")")
+        //.attr("class", "xaxis")
+        .call(yAxis);
 
 </script>
 </body>
