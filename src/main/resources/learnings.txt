@@ -1,2 +1,6 @@
 Opacity does not work in WebView
 new Array() does not work in WebView JavaScript
+
+run with:
+mvn clean install
+java -jar target/cod-1.0-SNAPSHOT.jar
