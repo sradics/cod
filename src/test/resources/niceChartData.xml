@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Features ProjectStartDate="03.03.2017">
+    <Feature>
+        <Name>A</Name>
+        <CostOfDelayPerWeek>5000</CostOfDelayPerWeek>
+        <DurationInWeeks>3</DurationInWeeks>
+    </Feature>
+    <Feature>
+        <Name>B</Name>
+        <CostOfDelayPerWeek>2000</CostOfDelayPerWeek>
+        <DurationInWeeks>4</DurationInWeeks>
+    </Feature>
+    <Feature>
+        <Name>C</Name>
+        <CostOfDelayPerWeek>6000</CostOfDelayPerWeek>
+        <DurationInWeeks>2</DurationInWeeks>
+    </Feature>
+    <Feature>
+        <Name>D</Name>
+        <CostOfDelayPerWeek>8000</CostOfDelayPerWeek>
+        <DurationInWeeks>1</DurationInWeeks>
+        <CostOfDelayStartDate>24.03.2017</CostOfDelayStartDate>
+        <CostOfDelayEndDate>31.03.2017</CostOfDelayEndDate>
+    </Feature>
+    <Feature>
+        <Name>E</Name>
+        <CostOfDelayPerWeek>5000</CostOfDelayPerWeek>
+        <DurationInWeeks>3</DurationInWeeks>
+        <CostOfDelayStartDate>17.03.2017</CostOfDelayStartDate>
+        <CostOfDelayEndDate>24.03.2017</CostOfDelayEndDate>
+    </Feature>
+</Features>

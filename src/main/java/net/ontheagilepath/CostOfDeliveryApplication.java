@@ -18,6 +18,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.web.WebEngine;
@@ -88,14 +90,20 @@ public class CostOfDeliveryApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        VBox vBox = new VBox();
+
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
+        vBox.setVgrow(grid,Priority.ALWAYS);
 
-        mainScene = new Scene(grid, 900, 600);
+        MenuBar menuBar = createMenu(grid);
 
-        primaryStage.setTitle("Cost of Delivery Sequence Calculator");
+        vBox.getChildren().addAll(menuBar, grid);
+        mainScene = new Scene(vBox, 900, 600);
+
+        primaryStage.setTitle("Cost of Delay Sequence Calculator");
 
         addProjectStartDateInput(grid);
 
@@ -112,8 +120,6 @@ public class CostOfDeliveryApplication extends Application {
 
         addFeatureButton(grid);
         addCalculateSequenceButton(grid);
-        addLoadButton(grid);
-        addSaveButton(grid);
         addClearButton(grid);
         addShowChartButton(grid);
 
@@ -122,8 +128,111 @@ public class CostOfDeliveryApplication extends Application {
         primaryStage.setScene(mainScene);
         stage = primaryStage;
         primaryStage.show();
+    }
+
+    private MenuBar createMenu(GridPane grid) {
+        MenuBar menuBar = new MenuBar();
+        Menu menuFile = new Menu("File");
+
+        menuBar.getMenus().addAll(menuFile);
+        MenuItem loadFile = createLoadFileMenuItem(grid);
+        MenuItem saveFile = createSaveFileMenuItem(grid);
+
+        menuFile.getItems().addAll(loadFile,saveFile);
+        return menuBar;
+    }
+
+    private MenuItem createSaveFileMenuItem(final GridPane grid) {
+        MenuItem loadFile = new MenuItem("Save Input...");
+        loadFile.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Specify file to save");
+                File fileToSave  = fileChooser.showSaveDialog(grid.getScene().getWindow());
+                if (fileToSave != null){
+                    List<Feature> features = sequenceModel.getFeatures();
+                    ObjectFactory objectFactory = new ObjectFactory();
+                    FeatureListType featureList = objectFactory.createFeatureListType();
+                    featureList.setProjectStartDate(projectStartDate.getText());
+                    for (Feature feature : features) {
+                        FeatureType featureType = objectFactory.createFeatureType();
+                        if (feature.getCostOfDelayStartDate()!=null)
+                            featureType.setCostOfDelayStartDate(feature.getCostOfDelayStartDate().toString(PATTERN));
+                        if (feature.getCostOfDelayEndDate()!=null)
+                            featureType.setCostOfDelayEndDate(feature.getCostOfDelayEndDate().toString(PATTERN));
 
 
+                        featureType.setName(feature.getName());
+                        if (feature.getDurationInWeeks()!=null)
+                            featureType.setDurationInWeeks(feature.getDurationInWeeks().toEngineeringString());
+                        if (feature.getCostOfDelayPerWeek()!=null)
+                            featureType.setCostOfDelayPerWeek(feature.getCostOfDelayPerWeek().toEngineeringString());
+
+                        featureType.setCostOfDelayStartWeek(null);
+                        featureType.setCostOfDelayEndWeek(null);
+                        featureList.getFeature().add(featureType);
+                    }
+
+
+                    try {
+                        JAXBElement<FeatureListType> gl =
+                                objectFactory.createFeatures( featureList );
+                        JAXBContext jc = JAXBContext.newInstance( "net.ontheagilepath.binding" );
+                        Marshaller m = jc.createMarshaller();
+                        m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
+                        m.marshal( gl, new FileOutputStream(fileToSave) );
+                    } catch( Exception jbe ){
+                        throw new RuntimeException(jbe);
+                    }
+                }
+            }
+        });
+        return loadFile;
+    }
+
+    private MenuItem createLoadFileMenuItem(final GridPane grid) {
+        MenuItem loadFile = new MenuItem("Load Input...");
+        loadFile.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Specify file with input to load");
+                File fileToOpen = fileChooser.showOpenDialog(grid.getScene().getWindow());
+                if (fileToOpen != null) {
+                    try {
+                        JAXBContext jc = JAXBContext.newInstance("net.ontheagilepath.binding");
+                        Unmarshaller u = jc.createUnmarshaller();
+                        JAXBElement<FeatureListType> doc = (JAXBElement<FeatureListType>) u.unmarshal(
+                                new FileInputStream(fileToOpen)
+                        );
+
+                        sequenceModel.clear();
+                        SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
+                        summarizer.clear();
+
+                        FeatureListType featureListType = doc.getValue();
+                        projectStartDate.setText(featureListType.getProjectStartDate());
+                        List<FeatureType> features = featureListType.getFeature();
+                        for (FeatureType feature : features) {
+                            sequenceModel.addFeature(
+                                    feature.getName(),
+                                    feature.getCostOfDelayPerWeek(),
+                                    feature.getDurationInWeeks(),
+                                    feature.getCostOfDelayStartWeek(),
+                                    feature.getCostOfDelayEndWeek(),
+                                    feature.getCostOfDelayStartDate(),
+                                    feature.getCostOfDelayEndDate(),
+                                    featureListType.getProjectStartDate()
+                            );
+                        }
+
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+
+                }
+            }
+        });
+        return loadFile;
     }
 
     private void openChartView(Stage primaryStage){
@@ -168,8 +277,8 @@ public class CostOfDeliveryApplication extends Application {
         webEngine.setJavaScriptEnabled(true);
         injectChartView(webEngine);
 
-        flow.getChildren().add(scrollPane);
         addShowFeatureScreenButton(flow);
+        flow.getChildren().add(scrollPane);
         scene.setRoot(flow);
 
         primaryStage.setScene(scene);
@@ -396,64 +505,12 @@ public class CostOfDeliveryApplication extends Application {
                 t.getTablePosition().getRow());
     }
 
-    private void addSaveButton(GridPane grid) {
-        saveButton = new Button("Save input");
-        HBox hbBtn = new HBox(10);
-        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
-        hbBtn.getChildren().add(saveButton);
-        grid.add(hbBtn, 1, 7);
 
-        saveButton.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
-            public void handle(ActionEvent e) {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Specify file to save");
-                File fileToSave  = fileChooser.showSaveDialog(grid.getScene().getWindow());
-                if (fileToSave != null){
-                    List<Feature> features = sequenceModel.getFeatures();
-                    ObjectFactory objectFactory = new ObjectFactory();
-                    FeatureListType featureList = objectFactory.createFeatureListType();
-                    featureList.setProjectStartDate(projectStartDate.getText());
-                    for (Feature feature : features) {
-                        FeatureType featureType = objectFactory.createFeatureType();
-                        if (feature.getCostOfDelayStartDate()!=null)
-                            featureType.setCostOfDelayStartDate(feature.getCostOfDelayStartDate().toString(PATTERN));
-                        if (feature.getCostOfDelayEndDate()!=null)
-                            featureType.setCostOfDelayEndDate(feature.getCostOfDelayEndDate().toString(PATTERN));
-
-
-                        featureType.setName(feature.getName());
-                        if (feature.getDurationInWeeks()!=null)
-                            featureType.setDurationInWeeks(feature.getDurationInWeeks().toEngineeringString());
-                        if (feature.getCostOfDelayPerWeek()!=null)
-                            featureType.setCostOfDelayPerWeek(feature.getCostOfDelayPerWeek().toEngineeringString());
-
-                        featureType.setCostOfDelayStartWeek(null);
-                        featureType.setCostOfDelayEndWeek(null);
-                        featureList.getFeature().add(featureType);
-                    }
-
-
-                    try {
-                        JAXBElement<FeatureListType> gl =
-                                objectFactory.createFeatures( featureList );
-                        JAXBContext jc = JAXBContext.newInstance( "net.ontheagilepath.binding" );
-                        Marshaller m = jc.createMarshaller();
-                        m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
-                        m.marshal( gl, new FileOutputStream(fileToSave) );
-                    } catch( Exception jbe ){
-                        throw new RuntimeException(jbe);
-                    }
-                }
-            }
-        });
-    }
 
     private void addFeatureButton(GridPane grid) {
         addFeatureButton = new Button("Add Feature");
         HBox hbBtn = new HBox(10);
-        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.setAlignment(Pos.BOTTOM_LEFT);
         hbBtn.getChildren().add(addFeatureButton);
         grid.add(hbBtn, 0, 6);
 
@@ -477,9 +534,9 @@ public class CostOfDeliveryApplication extends Application {
     private void addClearButton(GridPane grid) {
         clearButton = new Button("Clear Input");
         HBox hbBtn = new HBox(10);
-        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.setAlignment(Pos.BOTTOM_LEFT);
         hbBtn.getChildren().add(clearButton);
-        grid.add(hbBtn, 3, 7);
+        grid.add(hbBtn, 0, 7);
 
         clearButton.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -493,12 +550,15 @@ public class CostOfDeliveryApplication extends Application {
     }
 
     private void addShowChartButton(GridPane grid) {
-        showChartButton = new Button("Show Chart");
+        Image imageOk = new Image(getClass().getResourceAsStream("/1488765083_chart.png"));
+        ImageView imageView = new ImageView(imageOk);
+        imageView.setPreserveRatio(true);
+        imageView.setFitWidth(20.0);
+        showChartButton = new Button("Show Chart",imageView);
         HBox hbBtn = new HBox(10);
-        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.setAlignment(Pos.BOTTOM_LEFT);
         hbBtn.getChildren().add(showChartButton);
-        grid.add(hbBtn, 4, 7);
-
+        grid.add(hbBtn, 1, 7);
         showChartButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
@@ -511,7 +571,7 @@ public class CostOfDeliveryApplication extends Application {
     private void addShowFeatureScreenButton(Pane pane) {
         showFeatureScreeButton = new Button("Show Feature Screen");
         HBox hbBtn = new HBox(10);
-        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.setAlignment(Pos.BOTTOM_LEFT);
         hbBtn.getChildren().add(showFeatureScreeButton);
         pane.getChildren().add(hbBtn);
 
@@ -524,62 +584,10 @@ public class CostOfDeliveryApplication extends Application {
         });
     }
 
-
-    private void addLoadButton(GridPane grid) {
-        loadButton = new Button("Load input data");
-        HBox hbBtn = new HBox(10);
-        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
-        hbBtn.getChildren().add(loadButton);
-        grid.add(hbBtn, 0, 7);
-
-        loadButton.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
-            public void handle(ActionEvent e) {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Specify file with input to load");
-                File fileToOpen = fileChooser.showOpenDialog(grid.getScene().getWindow());
-                if (fileToOpen != null) {
-                    try {
-                        JAXBContext jc = JAXBContext.newInstance("net.ontheagilepath.binding");
-                        Unmarshaller u = jc.createUnmarshaller();
-                        JAXBElement<FeatureListType> doc = (JAXBElement<FeatureListType>) u.unmarshal(
-                                new FileInputStream(fileToOpen)
-                        );
-
-                        sequenceModel.clear();
-                        SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
-                        summarizer.clear();
-
-                        FeatureListType featureListType = doc.getValue();
-                        projectStartDate.setText(featureListType.getProjectStartDate());
-                        List<FeatureType> features = featureListType.getFeature();
-                        for (FeatureType feature : features) {
-                            sequenceModel.addFeature(
-                                    feature.getName(),
-                                    feature.getCostOfDelayPerWeek(),
-                                    feature.getDurationInWeeks(),
-                                    feature.getCostOfDelayStartWeek(),
-                                    feature.getCostOfDelayEndWeek(),
-                                    feature.getCostOfDelayStartDate(),
-                                    feature.getCostOfDelayEndDate(),
-                                    featureListType.getProjectStartDate()
-                            );
-                        }
-
-                    } catch (Exception e1) {
-                        e1.printStackTrace();
-                    }
-
-                }
-            }
-        });
-    }
-
     private void addCalculateSequenceButton(GridPane grid) {
         calculateSequenceButton = new Button("Calculate Sequence");
         HBox hbBtn = new HBox(10);
-        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.setAlignment(Pos.BOTTOM_LEFT);
         hbBtn.getChildren().add(calculateSequenceButton);
         grid.add(hbBtn, 1, 6);
 
