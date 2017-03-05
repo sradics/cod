@@ -35,6 +35,7 @@ import net.ontheagilepath.util.JavaBridge;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -55,6 +56,7 @@ import java.util.List;
 
 import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
 
+@SpringBootApplication
 @Configuration
 @ComponentScan(excludeFilters={
         @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value=App.class)
@@ -175,7 +177,7 @@ public class CostOfDeliveryApplication extends Application {
     }
 
     private void injectChartView(WebEngine webEngine) {
-        String chartView = FileUtil.loadFileToString(getClass(),"/test4.html");
+        String chartView = FileUtil.loadFileToString(getClass(), "/costOfDelayChart.html");
         chartView = injectJavaScript(chartView); //workaround for not working loading of javascript libraries from local
         webEngine.loadContent(chartView);
     }

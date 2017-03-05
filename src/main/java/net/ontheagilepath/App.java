@@ -6,9 +6,13 @@ import net.ontheagilepath.binding.ObjectFactory;
 import org.joda.time.DateTime;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -17,11 +21,11 @@ import javax.xml.bind.Marshaller;
 import java.math.BigDecimal;
 import java.util.Arrays;
 
-/**
- * Hello world!
- *
- */
-@SpringBootApplication
+@EnableAutoConfiguration
+@Configuration
+@ComponentScan(excludeFilters={
+        @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value=App.class)
+})
 public class App 
 {
     public static void main( String[] args )
