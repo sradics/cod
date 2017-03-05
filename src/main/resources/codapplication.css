@@ -1,0 +1,39 @@
+.root{
+    -fx-font-size: 10pt;
+    /*-fx-font-family: "Courier New";*/
+    /*-fx-base: rgb(132, 145, 47);*/
+    /*-fx-background: rgb(225, 228, 203);*/
+    /*-fx-background:rgba(255,255,255,0.2),url("/background.png");*/
+
+    -fx-background-image: url("/background.png");
+    /*-fx-opacity: 0.5;*/
+}
+
+.label{
+    -fx-font-weight: 700;
+    -fx-text-fill: #222222;
+    -fx-text-alignment: left;
+    -fx-text-overrun: ellipsis;
+    -fx-text-origin: bottom;
+    -fx-font-family: "Arial";
+}
+
+#mainGrid{
+    -fx-opacity: 0.9;
+    -fx-background: rgb(225, 255, 255);
+}
+
+#graphScrollpane,#browser,#flowpane{
+    -fx-opacity: 0.9;
+    -fx-background: rgb(255, 255, 255);
+    -fx-min-width: 900px;
+}
+
+
+#chartButton, #calculateSequenceButton{
+    -fx-min-width: 162px;
+}
+
+#addFeatureButton,#clearButton{
+    -fx-min-width: 120px;
+}

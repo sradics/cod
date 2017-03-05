@@ -95,13 +95,38 @@ public class CostOfDeliveryApplication extends Application {
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
+        grid.setId("mainGrid");
         grid.setPadding(new Insets(25, 25, 25, 25));
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setMinWidth(150);
+
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setMinWidth(100);
+
+        ColumnConstraints col3 = new ColumnConstraints();
+        col3.setMinWidth(70);
+
+        ColumnConstraints col4 = new ColumnConstraints();
+        col4.setMinWidth(120);
+
+        ColumnConstraints col5 = new ColumnConstraints();
+        col5.setMinWidth(100);
+
+        ColumnConstraints col6 = new ColumnConstraints();
+        col6.setMinWidth(100);
+
+        ColumnConstraints col7 = new ColumnConstraints();
+        col7.setMinWidth(100);
+
+
+        grid.getColumnConstraints().addAll(col1,col2,col3,col4,col5,col6,col7);
         vBox.setVgrow(grid,Priority.ALWAYS);
 
         MenuBar menuBar = createMenu(grid);
 
         vBox.getChildren().addAll(menuBar, grid);
         mainScene = new Scene(vBox, 900, 600);
+        mainScene.getStylesheets().add("/codapplication.css");
 
         primaryStage.setTitle("Cost of Delay Sequence Calculator");
 
@@ -236,15 +261,21 @@ public class CostOfDeliveryApplication extends Application {
     }
 
     private void openChartView(Stage primaryStage){
-        Scene scene = new Scene(new Group());
+        Scene scene = new Scene(new Group(),900,600);
+        scene.getStylesheets().add("/codapplication.css");
 
         FlowPane flow = new FlowPane();
+        flow.setId("flowpane");
 
         final WebView browser = new WebView();
         final WebEngine webEngine = browser.getEngine();
+        browser.setId("browser");
 
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(browser);
+        scrollPane.setId("graphScrollpane");
+        scrollPane.fitToHeightProperty();
+        scrollPane.fitToWidthProperty();
 
         TotalCostOfDelayCalculator calculator = applicationContext.getBean(TotalCostOfDelayCalculator.class);
         GraphDataBeanContainer container = calculator.calculateWeeklyCostOfDelayForSequence(lastCalculatedSequence,
@@ -506,9 +537,18 @@ public class CostOfDeliveryApplication extends Application {
     }
 
 
+    private ImageView createImageView(String source){
+        Image imageOk = new Image(getClass().getResourceAsStream(source));
+        ImageView imageView = new ImageView(imageOk);
+        imageView.setPreserveRatio(true);
+        imageView.setFitWidth(15.0);
+        return  imageView;
+    }
 
     private void addFeatureButton(GridPane grid) {
-        addFeatureButton = new Button("Add Feature");
+        addFeatureButton = new Button("Add Feature",createImageView("/add.png"));
+        addFeatureButton.setId("addFeatureButton");
+        addFeatureButton.setAlignment(Pos.BOTTOM_LEFT);
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.BOTTOM_LEFT);
         hbBtn.getChildren().add(addFeatureButton);
@@ -532,7 +572,10 @@ public class CostOfDeliveryApplication extends Application {
     }
 
     private void addClearButton(GridPane grid) {
-        clearButton = new Button("Clear Input");
+
+        clearButton = new Button("Clear Input",createImageView("/remove.png"));
+        clearButton.setId("clearButton");
+        clearButton.setAlignment(Pos.BOTTOM_LEFT);
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.BOTTOM_LEFT);
         hbBtn.getChildren().add(clearButton);
@@ -550,15 +593,13 @@ public class CostOfDeliveryApplication extends Application {
     }
 
     private void addShowChartButton(GridPane grid) {
-        Image imageOk = new Image(getClass().getResourceAsStream("/1488765083_chart.png"));
-        ImageView imageView = new ImageView(imageOk);
-        imageView.setPreserveRatio(true);
-        imageView.setFitWidth(20.0);
-        showChartButton = new Button("Show Chart",imageView);
+        showChartButton = new Button("Show Chart",createImageView("/1488765083_chart.png"));
+        showChartButton.setId("chartButton");
+        showChartButton.setAlignment(Pos.BOTTOM_LEFT);
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.BOTTOM_LEFT);
         hbBtn.getChildren().add(showChartButton);
-        grid.add(hbBtn, 1, 7);
+        grid.add(hbBtn, 1, 7,2,1);
         showChartButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
@@ -585,11 +626,12 @@ public class CostOfDeliveryApplication extends Application {
     }
 
     private void addCalculateSequenceButton(GridPane grid) {
-        calculateSequenceButton = new Button("Calculate Sequence");
+        calculateSequenceButton = new Button("Calculate Sequence",createImageView("/calculate.png"));
+        calculateSequenceButton.setId("calculateSequenceButton");
         HBox hbBtn = new HBox(10);
         hbBtn.setAlignment(Pos.BOTTOM_LEFT);
         hbBtn.getChildren().add(calculateSequenceButton);
-        grid.add(hbBtn, 1, 6);
+        grid.add(hbBtn, 1, 6,2,1);
 
         calculateSequenceButton.setOnAction(new EventHandler<ActionEvent>() {
 
