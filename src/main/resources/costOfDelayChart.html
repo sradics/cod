@@ -32,7 +32,7 @@
     </style>
 </head>
 <body>
-<svg width="550" height="250">
+<svg width="750" height="300">
 
 </svg>
 <script type="text/javascript">
@@ -183,6 +183,12 @@
 
     var mapWeeks = new Map();
     var totalMax = 0;
+    var canvasWidth=d3.select("svg").attr("width")-50;
+    var width = 50;
+    var height = d3.select("svg").attr("height")-50;
+    var colors = ["green","blue","cyan","purple","red","lime","#996633","Fuchsia","#99ff33"]
+    var defaultColor="#AAAAAA";
+
     var xAxisTickValues = [];
     var uniqueWeeks = new Map();
 
@@ -204,14 +210,7 @@
         }
     }
 
-    var canvasWidth=500;
-    var width = 50;
-    var height = 200;
-    var totalCostOfDelayPeerWeek = [];
-    var colors = ["green","blue","cyan","purple","red","lime","#996633","Fuchsia","#99ff33"]
-    var colorIndex=0;
-    var colorMap = new Map();
-    var defaultColor="#AAAAAA";
+
 
     var x = d3.scaleLinear()
         .domain([
@@ -221,8 +220,6 @@
             })+1
         ])
         .range([0,canvasWidth]);
-
-    //var xAxisTickValues = Array.from(mapWeeks.keys());
 
     var xAxis =  d3.axisBottom(x);
     xAxis.tickValues(xAxisTickValues);
@@ -240,6 +237,20 @@
         ])
         .range([0,height]);
 
+
+    function getNewTotalCost(d){
+        toc = totalCostOfDelayPeerWeek[d.week];
+        if (toc == null){
+            totalCostOfDelayPeerWeek[d.week]=d.costOfDelay;
+        }else{
+            totalCostOfDelayPeerWeek[d.week]=totalCostOfDelayPeerWeek[d.week]+d.costOfDelay;
+        }
+        return totalCostOfDelayPeerWeek[d.week];
+    }
+
+    var totalCostOfDelayPeerWeek = [];
+    var colorIndex=0;
+    var colorMap = new Map();
     d3.select("svg").selectAll("rect")
         .data(weekData)
         .enter()
@@ -248,13 +259,7 @@
             return x(d.week);
         })
         .attr("y", function(d,i) {
-            toc = totalCostOfDelayPeerWeek[d.week];
-            if (toc == null){
-                totalCostOfDelayPeerWeek[d.week]=d.costOfDelay;
-            }else{
-                totalCostOfDelayPeerWeek[d.week]=totalCostOfDelayPeerWeek[d.week]+d.costOfDelay;
-            }
-            return height-y((totalCostOfDelayPeerWeek[d.week]));
+            return height-y(getNewTotalCost(d));
         })
         .attr("height", function(d, i) {
             return y(d.costOfDelay);
@@ -285,14 +290,8 @@
             return x(d.week)+x(2)/2;
         })
         .attr("y", function(d,i) {
-            toc = totalCostOfDelayPeerWeek[d.week];
-            if (toc == null){
-                totalCostOfDelayPeerWeek[d.week]=d.costOfDelay;
-            }else{
-                totalCostOfDelayPeerWeek[d.week]=totalCostOfDelayPeerWeek[d.week]+d.costOfDelay;
-            }
             textSize=getTextSize(d.name+"("+d.costOfDelay+")",y(d.costOfDelay),x(2));
-            yPos = height-y((totalCostOfDelayPeerWeek[d.week]))+textSize;
+            yPos = height-y(getNewTotalCost(d))+textSize;
 
             if (height-yPos<5){
                 yPos = height-5;
@@ -310,8 +309,6 @@
         });
 
 
-
-    totalCostOfDelayPeerWeek = [];
     d3.select("svg").selectAll("text")
         .data(weekData,function(d){return null;})
         .enter()
@@ -320,7 +317,7 @@
             return x(d.week)+x(2)/2;
         })
         .attr("y", function(d,i) {
-            return 240;
+            return height+40;
         })
         .attr("text-anchor", "middle")
         .attr("font-family", "sans-serif")
@@ -331,12 +328,12 @@
         });
 
     d3.select("svg").append("g")
-        .attr("transform", "translate(0,200)")
+        .attr("transform", "translate(0,"+height+")")
         .attr("class", "xaxis")
         .call(xAxis);
 
     d3.select("svg").append("g")
-        .attr("transform", "translate("+x(2)/2+",200)")
+        .attr("transform", "translate("+x(2)/2+","+height+")")
         .attr("class", "xaxisNumbers")
         .call(xAxisNumbers);
 
