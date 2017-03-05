@@ -4,6 +4,11 @@
     <meta charset="utf-8">
     <title>D3 Demo: SVG with data</title>
     <script type="text/javascript" src="https://d3js.org/d3.v4.js"></script>
+
+    <script type="text/javascript">
+        //placeholder__
+    </script>
+
     <style type="text/css">
 	    svg rect {
 	        //opacity:0.5;
@@ -35,6 +40,7 @@ var weekData = [];
 
 console.log("testausgabe3");
 var dataBeans = databeans.getDataBeans();
+
 
 for (i=0;i<dataBeans.length;i++){
 
@@ -292,29 +298,64 @@ weekData = [
         .attr("stroke-width", "1");
 
     totalCostOfDelayPeerWeek = [];
-    d3.select("svg").selectAll("text")
-        .data(weekData)
-        .enter()
-        .append("text")
-        .attr("x", function(d,i) {
-            return x(d.week)+x(2)/2;
-        })
-        .attr("y", function(d,i) {
-            toc = totalCostOfDelayPeerWeek[d.week];
-            if (toc == null){
-                totalCostOfDelayPeerWeek[d.week]=d.costOfDelay;
+d3.select("svg").selectAll("text")
+    .data(weekData)
+    .enter()
+    .append("text")
+    .attr("x", function(d,i) {
+        return x(d.week)+x(2)/2;
+    })
+    .attr("y", function(d,i) {
+        toc = totalCostOfDelayPeerWeek[d.week];
+        if (toc == null){
+            totalCostOfDelayPeerWeek[d.week]=d.costOfDelay;
+        }else{
+            totalCostOfDelayPeerWeek[d.week]=totalCostOfDelayPeerWeek[d.week]+d.costOfDelay;
+        }
+        text = d.name+"("+d.costOfDelay+")";
+        textSize = Math.min(11,y(d.costOfDelay)-2);
+        if (textSize<6) {
+            textSize=6;
+        }
+        yPos = height-y((totalCostOfDelayPeerWeek[d.week]))+textSize;
+
+        if (height-yPos<5){
+            yPos = height-5;
+        }
+        return yPos;
+    })
+    .attr("text-anchor", "middle")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", function(d) {
+        text = d.name+"("+d.costOfDelay+")";
+        textSize = Math.min(11,y(d.costOfDelay)-2);
+        maxTextWidth=x(2);
+        counter=0;
+        while(true){
+            currentWidth=getTextWidth(text, "normal "+textSize+"px sans-serif");
+            if (currentWidth>maxTextWidth){
+                textSize=textSize-1;
+                console.log("reduce textSize from:"+(textSize+1)+" to: "+textSize+" currentWidth:"+currentWidth+
+                    " maxWidth:"+maxTextWidth+" counter:"+counter);
+                counter++;
             }else{
-                totalCostOfDelayPeerWeek[d.week]=totalCostOfDelayPeerWeek[d.week]+d.costOfDelay;
+                break;
             }
-            return height-y((totalCostOfDelayPeerWeek[d.week]))+15;
-        })
-        .attr("text-anchor", "middle")
-        .attr("font-family", "sans-serif")
-        .attr("font-size", "11px")
-        .attr("fill", "black")
-        .text(function(d) {
-			   		return d.name+"("+d.costOfDelay+")";
-			   });
+            if (counter>5 ||textSize<=6){
+                break;
+            }
+        }
+        if (textSize<6) {
+            textSize=6;
+        }
+        console.log(getTextWidth(text, "normal "+textSize+"px sans-serif"));
+        console.log(text+":"+text.length+" size:"+textSize+" height:"+y(d.costOfDelay)+" maxWidth:"+maxTextWidth)  ;
+        return textSize + "px"; })
+    .attr("fill", "black")
+    .text(function(d) {
+        return d.name+"("+d.costOfDelay+")";
+    });
+
 
 
     totalCostOfDelayPeerWeek = [];

@@ -24,12 +24,14 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
 import javafx.util.converter.BigDecimalStringConverter;
 import net.ontheagilepath.binding.FeatureListType;
 import net.ontheagilepath.binding.FeatureType;
 import net.ontheagilepath.binding.ObjectFactory;
 import net.ontheagilepath.graph.GraphDataBeanContainer;
+import net.ontheagilepath.util.DateTimeStringConverter;
+import net.ontheagilepath.util.FileUtil;
+import net.ontheagilepath.util.JavaBridge;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -50,6 +52,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
+import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
 
 @Configuration
 @ComponentScan(excludeFilters={
@@ -133,8 +137,7 @@ public class CostOfDeliveryApplication extends Application {
 
         TotalCostOfDelayCalculator calculator = applicationContext.getBean(TotalCostOfDelayCalculator.class);
         GraphDataBeanContainer container = calculator.calculateWeeklyCostOfDelayForSequence(lastCalculatedSequence,
-                DateTime.parse(projectStartDate.getText(),
-                        DateTimeFormat.forPattern("dd.MM.yyyy")));
+                new DateTimeStringConverter().fromString(projectStartDate.getText()));
 
         webEngine.getLoadWorker().stateProperty()
                 .addListener(new ChangeListener<State>() {
@@ -160,33 +163,27 @@ public class CostOfDeliveryApplication extends Application {
                     }
                 });
 
-        InputStream is = getClass().getResourceAsStream("/test4.html");
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        byte[] data = new byte[10000];
-        while(true){
-            int bytesRead = 0;
-            try {
-                bytesRead = is.read(data);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            if (bytesRead==-1)
-                break;
-            bos.write(data,0,bytesRead);
-        }
-        data = bos.toByteArray();
         webEngine.setJavaScriptEnabled(true);
+        injectChartView(webEngine);
 
-        webEngine.loadContent(new String(data));
-        //webEngine.load("http://alignedleft.com/content/03-tutorials/01-d3/110-drawing-svgs/3.html");
-
-        //webEngine.load(getClass().getResource("/test4.html").toExternalForm());
         flow.getChildren().add(scrollPane);
         addShowFeatureScreenButton(flow);
         scene.setRoot(flow);
 
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    private void injectChartView(WebEngine webEngine) {
+        String chartView = FileUtil.loadFileToString(getClass(),"/test4.html");
+        chartView = injectJavaScript(chartView); //workaround for not working loading of javascript libraries from local
+        webEngine.loadContent(chartView);
+    }
+
+    private String injectJavaScript(String chartView) {
+        String javaScriptToInject = FileUtil.loadFileToString(getClass(),"/scripts.js");
+        chartView = chartView.replace("//placeholder__",javaScriptToInject);
+        return chartView;
     }
 
     private void openFeatureScreenView(Stage primaryStage){
@@ -200,7 +197,7 @@ public class CostOfDeliveryApplication extends Application {
 
         projectStartDate = new TextField();
         grid.add(projectStartDate, 1, 1);
-        projectStartDate.setText(new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
+        projectStartDate.setText(new SimpleDateFormat(PATTERN).format(new Date()));
     }
 
     private void addFeatureNameInput(GridPane grid) {
@@ -230,8 +227,10 @@ public class CostOfDeliveryApplication extends Application {
                 if (!costOfDelayStartWeek.isFocused()) {
                     if (projectStartDate.getText() != null && !projectStartDate.getText().isEmpty()) {
                         if (costOfDelayStartWeek.getText() != null && !costOfDelayStartWeek.getText().isEmpty()) {
-                            costOfDelayStartDate.setText(DateTime.parse(projectStartDate.getText(),
-                                    DateTimeFormat.forPattern("dd.MM.yyyy")).plusWeeks(Integer.valueOf(costOfDelayStartWeek.getText())).toString("dd.MM.yyyy"));
+                            costOfDelayStartDate.setText(
+                                    new DateTimeStringConverter()
+                                            .fromString(projectStartDate.getText()
+                                    ).plusWeeks(Integer.valueOf(costOfDelayStartWeek.getText())).toString(PATTERN));
                         } else {
                             costOfDelayStartDate.setText(null);
                         }
@@ -253,7 +252,7 @@ public class CostOfDeliveryApplication extends Application {
                     if (projectStartDate.getText()!=null && !projectStartDate.getText().isEmpty()) {
                         if (costOfDelayEndWeek.getText() != null && !costOfDelayEndWeek.getText().isEmpty()) {
                             costOfDelayEndDate.setText(DateTime.parse(projectStartDate.getText(),
-                                    DateTimeFormat.forPattern("dd.MM.yyyy")).plusWeeks(Integer.valueOf(costOfDelayEndWeek.getText())).toString("dd.MM.yyyy"));
+                                    DateTimeFormat.forPattern(PATTERN)).plusWeeks(Integer.valueOf(costOfDelayEndWeek.getText())).toString(PATTERN));
                         }else{
                             costOfDelayEndDate.setText(null);
                         }
@@ -413,9 +412,9 @@ public class CostOfDeliveryApplication extends Application {
                     for (Feature feature : features) {
                         FeatureType featureType = objectFactory.createFeatureType();
                         if (feature.getCostOfDelayStartDate()!=null)
-                            featureType.setCostOfDelayStartDate(feature.getCostOfDelayStartDate().toString("dd.MM.yyyy"));
+                            featureType.setCostOfDelayStartDate(feature.getCostOfDelayStartDate().toString(PATTERN));
                         if (feature.getCostOfDelayEndDate()!=null)
-                            featureType.setCostOfDelayEndDate(feature.getCostOfDelayEndDate().toString("dd.MM.yyyy"));
+                            featureType.setCostOfDelayEndDate(feature.getCostOfDelayEndDate().toString(PATTERN));
 
 
                         featureType.setName(feature.getName());
@@ -625,24 +624,6 @@ public class CostOfDeliveryApplication extends Application {
         ConfigurableApplicationContext context = new SpringApplicationBuilder(CostOfDeliveryApplication.class).headless(false).run(args);
         setApplicationContext(context);
         launch(args);
-    }
-
-    private static class DateTimeStringConverter extends StringConverter<DateTime> {
-
-        @Override
-        public String toString(DateTime object) {
-            if (object==null)
-                return null;
-            return object.toString("dd.MM.yyyy");
-        }
-
-        @Override
-        public DateTime fromString(String string) {
-            if (string==null)
-                return null;
-            return DateTime.parse(string,
-                    DateTimeFormat.forPattern("dd.MM.yyyy"));
-        }
     }
 
 

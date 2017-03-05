@@ -1,4 +1,4 @@
-package net.ontheagilepath;
+package net.ontheagilepath.util;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;

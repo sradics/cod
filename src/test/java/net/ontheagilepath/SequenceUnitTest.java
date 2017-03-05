@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ComponentScan(excludeFilters={
         @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value=App.class)})
 public class SequenceUnitTest {

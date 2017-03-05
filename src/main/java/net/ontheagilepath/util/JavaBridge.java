@@ -1,4 +1,4 @@
-package net.ontheagilepath;
+package net.ontheagilepath.util;
 
 /**
  * Created by sebastianradics on 04.03.17.

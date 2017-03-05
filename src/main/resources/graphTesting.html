@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>D3 Demo: SVG with data</title>
     <script type="text/javascript" src="https://d3js.org/d3.v4.js"></script>
+    <script src="scripts.js" type="text/javascript"></script>
     <style type="text/css">
 	    svg rect {
 	        //opacity:0.5;
@@ -29,6 +30,9 @@
 <svg width="800" height="250">
 
 </svg>
+
+
+
 <script type="text/javascript">
 
 var weekData = [];
@@ -174,14 +178,6 @@ weekData = [
 
 }
 
-function getTextWidth(text, font) {
-    // re-use canvas object for better performance
-    var canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-    var context = canvas.getContext("2d");
-    context.font = font;
-    var metrics = context.measureText(text);
-    return metrics.width;
-    }
 
     var mapWeeks = new Map();
     var totalMax = 0;
