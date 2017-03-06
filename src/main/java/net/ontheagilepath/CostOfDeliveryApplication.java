@@ -121,18 +121,7 @@ public class CostOfDeliveryApplication extends Application {
         addCostOfDelayStartDateInput(grid);
         addCostOfDelayEndDateInput(grid);
         addFeatureBuildDurationInput(grid);
-
-        Label sequenceLabel = new Label("Sequence:");
-        grid.add(sequenceLabel, 3, 6);
-
-        featureSequenceTextField = new TextField();
-        grid.add(featureSequenceTextField, 4, 6, 2,1);
-
-        Label codLabel = new Label("Total-CoD:");
-        grid.add(codLabel, 3, 7);
-
-        codValueLabel = new Label("");
-        grid.add(codValueLabel, 4, 7);
+        addSequenceInformation(grid);
 
         addFeatureButton(grid);
         addCalculateSequenceButton(grid);
@@ -144,6 +133,32 @@ public class CostOfDeliveryApplication extends Application {
         primaryStage.setScene(mainScene);
         stage = primaryStage;
         primaryStage.show();
+    }
+
+    private void addSequenceInformation(GridPane grid) {
+        Label sequenceLabel = new Label("Sequence:");
+        grid.add(sequenceLabel, 3, 6);
+
+        featureSequenceTextField = new TextField();
+        featureSequenceTextField.focusedProperty().addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                if (!featureSequenceTextField.isFocused() && featureSequenceTextField.getText()!=null && !featureSequenceTextField.getText().isEmpty()) {
+                    DateTime startDate = new DateTimeStringConverter().fromString(projectStartDate.getText());
+                    Feature[] featureSequence = FeatureSequenceUtil.getSequenceFromLabels(
+                            featureSequenceTextField.getText(),sequenceModel.getFeatures().toArray(new Feature[]{})
+                    );
+                    TotalCostOfDelayCalculator calculator = applicationContext.getBean(TotalCostOfDelayCalculator.class);
+                    codValueLabel.setText(calculator.calculateTotalCostOfDelayForSequence(featureSequence,startDate).toString());
+                }
+            }
+        });
+        grid.add(featureSequenceTextField, 4, 6, 2,1);
+
+        Label codLabel = new Label("Total-CoD:");
+        grid.add(codLabel, 3, 7);
+        codValueLabel = new Label("");
+        grid.add(codValueLabel, 4, 7);
     }
 
     private void addColumnConstraints(VBox vBox, GridPane grid) {
@@ -179,9 +194,10 @@ public class CostOfDeliveryApplication extends Application {
 
         menuBar.getMenus().addAll(menuFile);
         MenuItem loadFile = createLoadFileMenuItem(grid);
+        MenuItem loadFileSample = createLoadFileSampleMenuItem(grid);
         MenuItem saveFile = createSaveFileMenuItem(grid);
 
-        menuFile.getItems().addAll(loadFile,saveFile);
+        menuFile.getItems().addAll(loadFile,loadFileSample,saveFile);
         return menuBar;
     }
 
@@ -233,6 +249,54 @@ public class CostOfDeliveryApplication extends Application {
         return loadFile;
     }
 
+    private MenuItem createLoadFileSampleMenuItem(final GridPane grid) {
+        MenuItem loadFile = new MenuItem("Load Input Sample");
+        loadFile.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+
+                File fileToOpen = new File(getClass().getResource("/niceChartData.xml").getFile());
+                loadInputDataFromFile(fileToOpen);
+            }
+        });
+        return loadFile;
+    }
+
+    private void loadInputDataFromFile(File fileToOpen) {
+        if (fileToOpen != null && fileToOpen.exists()) {
+            try {
+                JAXBContext jc = JAXBContext.newInstance("net.ontheagilepath.binding");
+                Unmarshaller u = jc.createUnmarshaller();
+                JAXBElement<FeatureListType> doc = (JAXBElement<FeatureListType>) u.unmarshal(
+                        new FileInputStream(fileToOpen)
+                );
+
+                sequenceModel.clear();
+                SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
+                summarizer.clear();
+
+                FeatureListType featureListType = doc.getValue();
+                projectStartDate.setText(featureListType.getProjectStartDate());
+                List<FeatureType> features = featureListType.getFeature();
+                for (FeatureType feature : features) {
+                    sequenceModel.addFeature(
+                            feature.getName(),
+                            feature.getCostOfDelayPerWeek(),
+                            feature.getDurationInWeeks(),
+                            feature.getCostOfDelayStartWeek(),
+                            feature.getCostOfDelayEndWeek(),
+                            feature.getCostOfDelayStartDate(),
+                            feature.getCostOfDelayEndDate(),
+                            featureListType.getProjectStartDate()
+                    );
+                }
+
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+
+        }
+    }
+
     private MenuItem createLoadFileMenuItem(final GridPane grid) {
         MenuItem loadFile = new MenuItem("Load Input...");
         loadFile.setOnAction(new EventHandler<ActionEvent>() {
@@ -240,39 +304,7 @@ public class CostOfDeliveryApplication extends Application {
                 FileChooser fileChooser = new FileChooser();
                 fileChooser.setTitle("Specify file with input to load");
                 File fileToOpen = fileChooser.showOpenDialog(grid.getScene().getWindow());
-                if (fileToOpen != null) {
-                    try {
-                        JAXBContext jc = JAXBContext.newInstance("net.ontheagilepath.binding");
-                        Unmarshaller u = jc.createUnmarshaller();
-                        JAXBElement<FeatureListType> doc = (JAXBElement<FeatureListType>) u.unmarshal(
-                                new FileInputStream(fileToOpen)
-                        );
-
-                        sequenceModel.clear();
-                        SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
-                        summarizer.clear();
-
-                        FeatureListType featureListType = doc.getValue();
-                        projectStartDate.setText(featureListType.getProjectStartDate());
-                        List<FeatureType> features = featureListType.getFeature();
-                        for (FeatureType feature : features) {
-                            sequenceModel.addFeature(
-                                    feature.getName(),
-                                    feature.getCostOfDelayPerWeek(),
-                                    feature.getDurationInWeeks(),
-                                    feature.getCostOfDelayStartWeek(),
-                                    feature.getCostOfDelayEndWeek(),
-                                    feature.getCostOfDelayStartDate(),
-                                    feature.getCostOfDelayEndDate(),
-                                    featureListType.getProjectStartDate()
-                            );
-                        }
-
-                    } catch (Exception e1) {
-                        e1.printStackTrace();
-                    }
-
-                }
+                loadInputDataFromFile(fileToOpen);
             }
         });
         return loadFile;
@@ -667,7 +699,7 @@ public class CostOfDeliveryApplication extends Application {
 
             @Override
             public void handle(ActionEvent e) {
-                DateTime startDate = DateTime.now();
+                DateTime startDate = new DateTimeStringConverter().fromString(projectStartDate.getText());
                 SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
                 summarizer.clear();
                 Feature[] featureSequence = applicationContext.getBean(Sequencer.class).calculateSequence(
