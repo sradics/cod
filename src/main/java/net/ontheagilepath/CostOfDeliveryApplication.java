@@ -5,6 +5,7 @@ package net.ontheagilepath;/**
 import javafx.application.Application;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -26,12 +27,14 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.converter.BigDecimalStringConverter;
 import net.ontheagilepath.binding.FeatureListType;
 import net.ontheagilepath.binding.FeatureType;
 import net.ontheagilepath.binding.ObjectFactory;
 import net.ontheagilepath.graph.GraphDataBeanContainer;
 import net.ontheagilepath.util.DateTimeStringConverter;
+import net.ontheagilepath.util.FeatureSequenceUtil;
 import net.ontheagilepath.util.FileUtil;
 import net.ontheagilepath.util.JavaBridge;
 import org.joda.time.DateTime;
@@ -75,18 +78,20 @@ public class CostOfDeliveryApplication extends Application {
     private TextField costOfDelayStartWeek;
     private TextField costOfDelayEndWeek;
     private TextField featureBuildDuration;
+    private TextField featureSequenceTextField;
+
     private Button addFeatureButton;
     private Button clearButton;
     private Button showChartButton;
     private Button showFeatureScreeButton;
     private Button calculateSequenceButton;
-    private Button loadButton;
-    private Button saveButton;
-    private Label sequenceLabel;
+    private Label codValueLabel;
     private TableView<Feature> featureTable;
     private Scene mainScene;
     private Stage stage;
-    private Feature[] lastCalculatedSequence;
+    private static final int SCREEN_WIDTH=900;
+    private static final int SCREEN_HEIGHT=600;
+    private static final String SCREEN_CSS="/codapplication.css";
 
     @Override
     public void start(Stage primaryStage) {
@@ -97,6 +102,51 @@ public class CostOfDeliveryApplication extends Application {
         grid.setVgap(10);
         grid.setId("mainGrid");
         grid.setPadding(new Insets(25, 25, 25, 25));
+        addColumnConstraints(vBox, grid);
+
+        MenuBar menuBar = createMenu(grid);
+
+        vBox.getChildren().addAll(menuBar, grid);
+        mainScene = new Scene(vBox, SCREEN_WIDTH, SCREEN_HEIGHT);
+        mainScene.getStylesheets().add(SCREEN_CSS);
+
+        primaryStage.setTitle("Cost of Delay Sequence Calculator");
+
+        addProjectStartDateInput(grid);
+
+        addFeatureNameInput(grid);
+        addCostOfDelayPerWeekInput(grid);
+        addCostOfDelayStartWeekInput(grid);
+        addCostOfDelayEndWeekInput(grid);
+        addCostOfDelayStartDateInput(grid);
+        addCostOfDelayEndDateInput(grid);
+        addFeatureBuildDurationInput(grid);
+
+        Label sequenceLabel = new Label("Sequence:");
+        grid.add(sequenceLabel, 3, 6);
+
+        featureSequenceTextField = new TextField();
+        grid.add(featureSequenceTextField, 4, 6, 2,1);
+
+        Label codLabel = new Label("Total-CoD:");
+        grid.add(codLabel, 3, 7);
+
+        codValueLabel = new Label("");
+        grid.add(codValueLabel, 4, 7);
+
+        addFeatureButton(grid);
+        addCalculateSequenceButton(grid);
+        addClearButton(grid);
+        addShowChartButton(grid);
+
+        addFeatureTable(grid);
+
+        primaryStage.setScene(mainScene);
+        stage = primaryStage;
+        primaryStage.show();
+    }
+
+    private void addColumnConstraints(VBox vBox, GridPane grid) {
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setMinWidth(150);
 
@@ -120,39 +170,7 @@ public class CostOfDeliveryApplication extends Application {
 
 
         grid.getColumnConstraints().addAll(col1,col2,col3,col4,col5,col6,col7);
-        vBox.setVgrow(grid,Priority.ALWAYS);
-
-        MenuBar menuBar = createMenu(grid);
-
-        vBox.getChildren().addAll(menuBar, grid);
-        mainScene = new Scene(vBox, 900, 600);
-        mainScene.getStylesheets().add("/codapplication.css");
-
-        primaryStage.setTitle("Cost of Delay Sequence Calculator");
-
-        addProjectStartDateInput(grid);
-
-        addFeatureNameInput(grid);
-        addCostOfDelayPerWeekInput(grid);
-        addCostOfDelayStartWeekInput(grid);
-        addCostOfDelayEndWeekInput(grid);
-        addCostOfDelayStartDateInput(grid);
-        addCostOfDelayEndDateInput(grid);
-        addFeatureBuildDurationInput(grid);
-
-        sequenceLabel = new Label("Sequence:");
-        grid.add(sequenceLabel, 3, 6,3,1);
-
-        addFeatureButton(grid);
-        addCalculateSequenceButton(grid);
-        addClearButton(grid);
-        addShowChartButton(grid);
-
-        addFeatureTable(grid);
-
-        primaryStage.setScene(mainScene);
-        stage = primaryStage;
-        primaryStage.show();
+        vBox.setVgrow(grid, Priority.ALWAYS);
     }
 
     private MenuBar createMenu(GridPane grid) {
@@ -261,8 +279,8 @@ public class CostOfDeliveryApplication extends Application {
     }
 
     private void openChartView(Stage primaryStage){
-        Scene scene = new Scene(new Group(),900,600);
-        scene.getStylesheets().add("/codapplication.css");
+        Scene scene = new Scene(new Group(),SCREEN_WIDTH,SCREEN_HEIGHT);
+        scene.getStylesheets().add(SCREEN_CSS);
 
         FlowPane flow = new FlowPane();
         flow.setId("flowpane");
@@ -278,7 +296,11 @@ public class CostOfDeliveryApplication extends Application {
         scrollPane.fitToWidthProperty();
 
         TotalCostOfDelayCalculator calculator = applicationContext.getBean(TotalCostOfDelayCalculator.class);
-        GraphDataBeanContainer container = calculator.calculateWeeklyCostOfDelayForSequence(lastCalculatedSequence,
+        Feature[] sequence = FeatureSequenceUtil.getSequenceFromLabels(
+                featureSequenceTextField.getText(),
+                sequenceModel.getFeatures().toArray(new Feature[]{}));
+
+        GraphDataBeanContainer container = calculator.calculateWeeklyCostOfDelayForSequence(sequence,
                 new DateTimeStringConverter().fromString(projectStartDate.getText()));
 
         webEngine.getLoadWorker().stateProperty()
@@ -438,11 +460,19 @@ public class CostOfDeliveryApplication extends Application {
 
         featureTable.setEditable(true);
 
+        TableColumn nrCol = new TableColumn("Nr");
         TableColumn nameCol = new TableColumn("Name");
         TableColumn codPerWeekCol = new TableColumn("CoD/Week");
         TableColumn durationCol = new TableColumn("Duration");
         TableColumn codStartDateCol = new TableColumn("CoD Start Date");
         TableColumn codEndDateCol = new TableColumn("CoD End Date");
+
+        nrCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures, ObservableValue>() {
+            @Override
+            public ObservableValue call(TableColumn.CellDataFeatures param) {
+                return new ReadOnlyObjectWrapper(param.getTableView().getItems().indexOf(param.getValue()));
+            }
+        });
 
         nameCol.setCellValueFactory(
                 new PropertyValueFactory<Feature,String>("name")
@@ -520,7 +550,7 @@ public class CostOfDeliveryApplication extends Application {
         );
 
 
-        featureTable.getColumns().addAll(nameCol, codPerWeekCol, durationCol,codStartDateCol,codEndDateCol);
+        featureTable.getColumns().addAll(nrCol,nameCol, codPerWeekCol, durationCol,codStartDateCol,codEndDateCol);
 
         final Label label = new Label("Features");
         label.setFont(new Font("Arial", 20));
@@ -642,8 +672,6 @@ public class CostOfDeliveryApplication extends Application {
                 summarizer.clear();
                 Feature[] featureSequence = applicationContext.getBean(Sequencer.class).calculateSequence(
                         sequenceModel.getFeatures(),startDate);
-                lastCalculatedSequence = featureSequence;
-
                 TotalCostOfDelayCalculator calculator = applicationContext.getBean(TotalCostOfDelayCalculator.class);
 
 
@@ -657,9 +685,10 @@ public class CostOfDeliveryApplication extends Application {
                     sequenceResult.append(feature.getName());
                     previousExists = true;
                 }
-                sequenceResult.append(" Total-CoD:");
-                sequenceResult.append(calculator.calculateTotalCostOfDelayForSequence(featureSequence,startDate).toString());
-                sequenceLabel.setText(sequenceResult.toString());
+
+                featureSequenceTextField.setText(sequenceResult.toString());
+                codValueLabel.setText(calculator.calculateTotalCostOfDelayForSequence(featureSequence,startDate).toString());
+
                 System.out.println(Arrays.asList(featureSequence));
                 System.out.println("Done");
             }
