@@ -37,3 +37,7 @@
 #addFeatureButton,#clearButton{
     -fx-min-width: 120px;
 }
+
+#footer{
+    -fx-background: rgb(255, 255, 255);
+}

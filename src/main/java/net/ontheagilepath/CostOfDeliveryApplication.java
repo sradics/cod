@@ -86,6 +86,7 @@ public class CostOfDeliveryApplication extends Application {
     private Button showFeatureScreeButton;
     private Button calculateSequenceButton;
     private Label codValueLabel;
+    private TextField statusTextField;
     private TableView<Feature> featureTable;
     private Scene mainScene;
     private Stage stage;
@@ -105,8 +106,13 @@ public class CostOfDeliveryApplication extends Application {
         addColumnConstraints(vBox, grid);
 
         MenuBar menuBar = createMenu(grid);
+        VBox footer = new VBox();
+        footer.setId("footer");
+        statusTextField = new TextField();
+        statusTextField.setEditable(false);
+        footer.getChildren().add(statusTextField);
 
-        vBox.getChildren().addAll(menuBar, grid);
+        vBox.getChildren().addAll(menuBar, grid,footer);
         mainScene = new Scene(vBox, SCREEN_WIDTH, SCREEN_HEIGHT);
         mainScene.getStylesheets().add(SCREEN_CSS);
 
@@ -707,7 +713,8 @@ public class CostOfDeliveryApplication extends Application {
                 TotalCostOfDelayCalculator calculator = applicationContext.getBean(TotalCostOfDelayCalculator.class);
 
 
-                summarizer.printSummary();
+                File result = summarizer.printSummary();
+                statusTextField.setText("Wrote full sequence calculation to: "+result.getAbsolutePath());
 
                 StringBuilder sequenceResult = new StringBuilder();
                 boolean previousExists = false;

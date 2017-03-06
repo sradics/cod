@@ -41,9 +41,7 @@ public class SequenceSummaryData {
 
     @Override
     public String toString() {
-        return "SequenceSummaryData{" +
-                "totalCostOfDelay=" + totalCostOfDelay +
-                ", featureSequence=" + featureSequence +
-                '}';
+        return "totalCostOfDelay=" + totalCostOfDelay +
+                ", featureSequence=" + featureSequence;
     }
 }

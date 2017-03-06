@@ -52,7 +52,7 @@ public class SequencerImpl implements Sequencer {
                 featuresForSequenceMinTrial =featuresForSequenceCurrentTrial;
                 currentMinCostOfDelay = costOfDelayForSequence;
             }
-            if (counter % 1000 ==0)
+            if (counter % 100000 ==0)
                 log.info("counter"+counter);
         }
 

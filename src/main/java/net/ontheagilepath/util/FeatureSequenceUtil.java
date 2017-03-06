@@ -18,7 +18,7 @@ public class FeatureSequenceUtil {
         StringTokenizer stok = new StringTokenizer(labels,",");
         ArrayList<Feature> featureSequence = new ArrayList<Feature>();
         while(stok.hasMoreTokens()){
-            Feature feature = featureMap.get(stok.nextToken());
+            Feature feature = featureMap.get(stok.nextToken().trim());
             if (feature!=null)
                 featureSequence.add(feature);
         }

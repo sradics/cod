@@ -58,5 +58,6 @@
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.objenesis:objenesis:2.5" level="project" />
     <orderEntry type="library" name="Maven: com.jgoodies:jgoodies-forms:1.9.0" level="project" />
     <orderEntry type="library" name="Maven: com.jgoodies:jgoodies-common:1.8.1" level="project" />
+    <orderEntry type="library" name="Maven: commons-io:commons-io:2.5" level="project" />
   </component>
 </module>
