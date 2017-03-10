@@ -58,6 +58,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
 
@@ -68,6 +69,7 @@ import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
 })
 @EnableAutoConfiguration
 public class CostOfDeliveryApplication extends Application {
+    private static final Logger log = Logger.getLogger( SequenceSummarizerImpl.class.getName() );
 
     private FeatureSequenceModel sequenceModel = new FeatureSequenceModel();
     private TextField projectStartDate;
@@ -260,47 +262,55 @@ public class CostOfDeliveryApplication extends Application {
         loadFile.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent t) {
 
-                File fileToOpen = new File(getClass().getResource("/niceChartData.xml").getFile());
-                loadInputDataFromFile(fileToOpen);
+                loadInputDataFromStream(getClass().getResourceAsStream("/niceChartData.xml"));
             }
         });
         return loadFile;
     }
 
-    private void loadInputDataFromFile(File fileToOpen) {
-        if (fileToOpen != null && fileToOpen.exists()) {
+    private void loadInputDataFromFile(File file){
+        if (file!=null && file.exists()){
             try {
-                JAXBContext jc = JAXBContext.newInstance("net.ontheagilepath.binding");
-                Unmarshaller u = jc.createUnmarshaller();
-                JAXBElement<FeatureListType> doc = (JAXBElement<FeatureListType>) u.unmarshal(
-                        new FileInputStream(fileToOpen)
+                loadInputDataFromStream(new FileInputStream(file));
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void loadInputDataFromStream(InputStream fileToOpen) {
+
+        try {
+            JAXBContext jc = JAXBContext.newInstance("net.ontheagilepath.binding");
+            Unmarshaller u = jc.createUnmarshaller();
+            JAXBElement<FeatureListType> doc = (JAXBElement<FeatureListType>) u.unmarshal(fileToOpen);
+            log.info("Number of features to load:"+doc.getValue().getFeature().size());
+            sequenceModel.clear();
+            SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
+            summarizer.clear();
+
+            FeatureListType featureListType = doc.getValue();
+            projectStartDate.setText(featureListType.getProjectStartDate());
+            List<FeatureType> features = featureListType.getFeature();
+            for (FeatureType feature : features) {
+                sequenceModel.addFeature(
+                        feature.getName(),
+                        feature.getCostOfDelayPerWeek(),
+                        feature.getDurationInWeeks(),
+                        feature.getCostOfDelayStartWeek(),
+                        feature.getCostOfDelayEndWeek(),
+                        feature.getCostOfDelayStartDate(),
+                        feature.getCostOfDelayEndDate(),
+                        featureListType.getProjectStartDate()
                 );
-
-                sequenceModel.clear();
-                SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
-                summarizer.clear();
-
-                FeatureListType featureListType = doc.getValue();
-                projectStartDate.setText(featureListType.getProjectStartDate());
-                List<FeatureType> features = featureListType.getFeature();
-                for (FeatureType feature : features) {
-                    sequenceModel.addFeature(
-                            feature.getName(),
-                            feature.getCostOfDelayPerWeek(),
-                            feature.getDurationInWeeks(),
-                            feature.getCostOfDelayStartWeek(),
-                            feature.getCostOfDelayEndWeek(),
-                            feature.getCostOfDelayStartDate(),
-                            feature.getCostOfDelayEndDate(),
-                            featureListType.getProjectStartDate()
-                    );
-                }
-
-            } catch (Exception e1) {
-                e1.printStackTrace();
             }
 
+        } catch (Exception e1) {
+            log.info(e1.getMessage());
+            throw new RuntimeException(e1);
         }
+
+
     }
 
     private MenuItem createLoadFileMenuItem(final GridPane grid) {
