@@ -68,7 +68,7 @@ import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
         @ComponentScan.Filter(type= FilterType.ASSIGNABLE_TYPE, value=App.class)
 })
 @EnableAutoConfiguration
-public class CostOfDeliveryApplication extends Application {
+public class CostOfDelayApplication extends Application {
     private static final Logger log = Logger.getLogger( SequenceSummarizerImpl.class.getName() );
 
     private FeatureSequenceModel sequenceModel = new FeatureSequenceModel();
@@ -755,7 +755,7 @@ public class CostOfDeliveryApplication extends Application {
     private static ApplicationContext applicationContext;
 
     public static void main(String[] args) {
-        ConfigurableApplicationContext context = new SpringApplicationBuilder(CostOfDeliveryApplication.class).headless(false).run(args);
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(CostOfDelayApplication.class).headless(false).run(args);
         setApplicationContext(context);
         launch(args);
     }
