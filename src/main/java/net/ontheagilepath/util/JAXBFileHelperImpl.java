@@ -5,6 +5,7 @@ import net.ontheagilepath.FeatureSequenceModel;
 import net.ontheagilepath.binding.FeatureListType;
 import net.ontheagilepath.binding.FeatureType;
 import net.ontheagilepath.binding.ObjectFactory;
+import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBContext;
@@ -21,6 +22,7 @@ import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
  * Created by sebastianradics on 10.03.17.
  */
 @Component
+@Configurable
 public class JAXBFileHelperImpl implements JAXBFileHelper {
     private static final Logger log = Logger.getLogger( JAXBFileHelperImpl.class.getName() );
 

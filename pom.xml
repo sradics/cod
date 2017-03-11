@@ -68,6 +68,15 @@
       <version>2.5</version>
     </dependency>
 
+
+      <!-- https://mvnrepository.com/artifact/org.springframework/spring-aspects -->
+      <dependency>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-aspects</artifactId>
+          <version>5.0.0.M5</version>
+      </dependency>
+
+
   </dependencies>
 
   <build>

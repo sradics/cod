@@ -29,14 +29,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.converter.BigDecimalStringConverter;
-import net.ontheagilepath.binding.FeatureListType;
-import net.ontheagilepath.binding.FeatureType;
-import net.ontheagilepath.binding.ObjectFactory;
 import net.ontheagilepath.graph.GraphDataBeanContainer;
 import net.ontheagilepath.util.*;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -46,16 +42,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import java.io.*;
+import java.io.File;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 import java.util.logging.Logger;
 
 import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
@@ -67,9 +55,7 @@ import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
 })
 @EnableAutoConfiguration
 public class CostOfDelayApplication extends Application {
-    private static final Logger log = Logger.getLogger( SequenceSummarizerImpl.class.getName() );
-
-    private JAXBFileHelper fileHelper = new JAXBFileHelperImpl();
+    private static final Logger log = Logger.getLogger( CostOfDelayApplication.class.getName() );
 
     private FeatureSequenceModel sequenceModel = new FeatureSequenceModel();
     private TextField projectStartDate;
@@ -216,7 +202,7 @@ public class CostOfDelayApplication extends Application {
                 FileChooser fileChooser = new FileChooser();
                 fileChooser.setTitle("Specify file to save");
                 File fileToSave  = fileChooser.showSaveDialog(grid.getScene().getWindow());
-                fileHelper.saveToFile(fileToSave,sequenceModel);
+                applicationContext.getBean(JAXBFileHelper.class).saveToFile(fileToSave,sequenceModel);
             }
         });
         return loadFile;
@@ -226,7 +212,7 @@ public class CostOfDelayApplication extends Application {
         MenuItem loadFile = new MenuItem("Load Input Sample");
         loadFile.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent t) {
-                sequenceModel = fileHelper.loadInputDataFromStream(getClass().getResourceAsStream("/niceChartData.xml"));
+                sequenceModel = applicationContext.getBean(JAXBFileHelper.class).loadInputDataFromStream(getClass().getResourceAsStream("/niceChartData.xml"));
                 updateFromModel();
             }
         });
@@ -234,15 +220,10 @@ public class CostOfDelayApplication extends Application {
     }
 
     private void updateFromModel() {
-        resetSummaries();
         projectStartDate.setText(sequenceModel.getProjectStartDate());
         featureTable.setItems(sequenceModel.getFeatures());
     }
 
-    private void resetSummaries(){
-        SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
-        summarizer.clear();
-    }
 
 
 
@@ -253,7 +234,7 @@ public class CostOfDelayApplication extends Application {
                 FileChooser fileChooser = new FileChooser();
                 fileChooser.setTitle("Specify file with input to load");
                 File fileToOpen = fileChooser.showOpenDialog(grid.getScene().getWindow());
-                sequenceModel = fileHelper.loadInputDataFromFile(fileToOpen);
+                sequenceModel = applicationContext.getBean(JAXBFileHelper.class).loadInputDataFromFile(fileToOpen);
                 updateFromModel();
             }
         });
@@ -657,30 +638,24 @@ public class CostOfDelayApplication extends Application {
             @Override
             public void handle(ActionEvent e) {
                 DateTime startDate = new DateTimeStringConverter().fromString(sequenceModel.getProjectStartDate());
-                SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
-                summarizer.clear();
                 Feature[] featureSequence = applicationContext.getBean(Sequencer.class).calculateSequence(
                         sequenceModel.getFeatures(),startDate);
-                TotalCostOfDelayCalculator calculator = applicationContext.getBean(TotalCostOfDelayCalculator.class);
-
-
-                File result = summarizer.printSummary();
-                statusTextField.setText("Wrote full sequence calculation to: "+result.getAbsolutePath());
+                statusTextField.setText("Wrote full sequence calculation to: "+applicationContext.getBean(SequenceSummarizer.class).getCurrentSummary().getAbsolutePath());
 
                 StringBuilder sequenceResult = new StringBuilder();
                 boolean previousExists = false;
                 for (Feature feature : featureSequence) {
-                    if (previousExists)
+                    if (previousExists) {
                         sequenceResult.append(",");
+                    }
                     sequenceResult.append(feature.getName());
                     previousExists = true;
                 }
 
                 featureSequenceTextField.setText(sequenceResult.toString());
-                codValueLabel.setText(calculator.calculateTotalCostOfDelayForSequence(featureSequence,startDate).toString());
+                codValueLabel.setText(applicationContext.getBean(TotalCostOfDelayCalculator.class)
+                        .calculateTotalCostOfDelayForSequence(featureSequence,startDate).toString());
 
-                System.out.println(Arrays.asList(featureSequence));
-                System.out.println("Done");
             }
         });
     }

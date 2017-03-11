@@ -1,8 +1,6 @@
 package net.ontheagilepath;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.LineIterator;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -33,9 +31,17 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
 
     public SequenceSummarizerImpl(){
         tempFile = new File(FileUtils.getTempDirectory(),"codtempdata");
+        sorted = new File(FileUtils.getTempDirectory(),"codtempdata_sorted");
+
+        if (tempFile.exists()) {
+            tempFile.delete();
+        }
+        if (sorted.exists())
+            sorted.delete();
 
         try {
             tempFile.createNewFile();
+            sorted.createNewFile();
             log.info("write summary to file:"+tempFile.getAbsolutePath());
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -70,6 +76,7 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
 
         Path sortedFile = Paths.get(sorted.getAbsolutePath());
         try {
+            sorted.delete();
             sorted.createNewFile();
             Stream<CharSequence> sortedLines = Files.lines(initialFile).sorted(
                     new Comparator<String>() {
@@ -90,17 +97,7 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
             System.out.println("all sequences can be found sorted in file: "+sorted.getAbsolutePath());
             return sorted;
 
-            /*
-            LineIterator it = FileUtils.lineIterator(sorted);
-            try {
-                while (it.hasNext()) {
-                    String line = it.nextLine();
-                    System.out.println(line);
-                }
-            } finally {
-                it.close();
-            }
-            */
+
         }catch (Exception e){
             throw new RuntimeException(e);
         }
@@ -110,17 +107,27 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
     public void clear() {
         summaryDataList.clear();
         tempFile = new File(FileUtils.getTempDirectory(),"codtempdata");
+
         try {
             if (sorted!=null && sorted.exists()) {
+                sorted.delete();
                 sorted.createNewFile();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         try {
+            tempFile.delete();
             tempFile.createNewFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        log.info("clear called - new tempfile is: "+tempFile.getAbsolutePath());
+    }
+
+    @Override
+    public File getCurrentSummary() {
+        return sorted;
     }
 }

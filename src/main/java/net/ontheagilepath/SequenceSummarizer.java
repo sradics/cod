@@ -11,4 +11,6 @@ public interface SequenceSummarizer {
     File printSummary();
 
     void clear();
+
+    File getCurrentSummary();
 }
