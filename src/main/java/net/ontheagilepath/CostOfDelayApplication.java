@@ -44,6 +44,7 @@ import org.springframework.context.annotation.FilterType;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
@@ -67,6 +68,7 @@ public class CostOfDelayApplication extends Application {
     private TextField costOfDelayEndWeek;
     private TextField featureBuildDuration;
     private TextField featureSequenceTextField;
+    private TextField maxFeatureSequenceTextField;
 
     private Button addFeatureButton;
     private Button clearButton;
@@ -74,6 +76,7 @@ public class CostOfDelayApplication extends Application {
     private Button showFeatureScreeButton;
     private Button calculateSequenceButton;
     private Label codValueLabel;
+    private Label maxCodValueLabel;
     private TextField statusTextField;
     private TableView<Feature> featureTable;
     private Scene mainScene;
@@ -130,8 +133,9 @@ public class CostOfDelayApplication extends Application {
     }
 
     private void addSequenceInformation(GridPane grid) {
-        Label sequenceLabel = new Label("Sequence:");
+        Label sequenceLabel = new Label("Best Sequence:");
         grid.add(sequenceLabel, 3, 6);
+        grid.add(new Label("Worst Sequence:"), 3, 7);
 
         featureSequenceTextField = new TextField();
         featureSequenceTextField.focusedProperty().addListener(new InvalidationListener() {
@@ -149,10 +153,14 @@ public class CostOfDelayApplication extends Application {
         });
         grid.add(featureSequenceTextField, 4, 6, 2,1);
 
-        Label codLabel = new Label("Total-CoD:");
-        grid.add(codLabel, 3, 7);
         codValueLabel = new Label("");
-        grid.add(codValueLabel, 4, 7);
+        grid.add(codValueLabel, 6, 6);
+
+        maxFeatureSequenceTextField = new TextField();
+        maxFeatureSequenceTextField.setEditable(false);
+        grid.add(maxFeatureSequenceTextField, 4, 7, 2,1);
+        maxCodValueLabel = new Label("");
+        grid.add(maxCodValueLabel, 6, 7);
     }
 
     private void addColumnConstraints(VBox vBox, GridPane grid) {
@@ -652,12 +660,31 @@ public class CostOfDelayApplication extends Application {
                     previousExists = true;
                 }
 
+                SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
+
                 featureSequenceTextField.setText(sequenceResult.toString());
                 codValueLabel.setText(applicationContext.getBean(TotalCostOfDelayCalculator.class)
                         .calculateTotalCostOfDelayForSequence(featureSequence,startDate).toString());
 
+                maxCodValueLabel.setText(summarizer.getTotalCostOfDelayMax().getTotalCostOfDelay().toString());
+                maxFeatureSequenceTextField.setText(
+                        convertStringList(summarizer.getTotalCostOfDelayMax().getFeatureSequence()));
+
             }
         });
+    }
+
+    private String convertStringList(List<String> list){
+        StringBuilder result = new StringBuilder();
+        boolean append = false;
+        for (String s : list) {
+            if (append){
+                result.append(",");
+            }
+            append = true;
+            result.append(s);
+        }
+        return result.toString();
     }
 
     public static ApplicationContext getApplicationContext() {

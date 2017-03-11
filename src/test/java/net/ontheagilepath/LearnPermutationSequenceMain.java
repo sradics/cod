@@ -9,8 +9,8 @@ import java.util.logging.Logger;
 /**
  * Created by sebastianradics on 23.02.17.
  */
-public class PermutationSequence {
-    private static final Logger log = Logger.getLogger( PermutationSequence.class.getName() );
+public class LearnPermutationSequenceMain {
+    private static final Logger log = Logger.getLogger( LearnPermutationSequenceMain.class.getName() );
     public static void main(String... args){
         int numberOfFeatures = 6;
         Integer[] vectorInput = new Integer[numberOfFeatures];

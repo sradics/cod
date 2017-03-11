@@ -9,6 +9,7 @@ import java.io.InputStream;
  */
 public class FileUtil {
     public static String loadFileToString(Class base, String fileName){
+
         InputStream is = base.getResourceAsStream(fileName);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         byte[] data = new byte[10000];
