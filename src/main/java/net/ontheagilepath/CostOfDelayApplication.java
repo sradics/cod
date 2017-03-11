@@ -33,12 +33,10 @@ import net.ontheagilepath.binding.FeatureListType;
 import net.ontheagilepath.binding.FeatureType;
 import net.ontheagilepath.binding.ObjectFactory;
 import net.ontheagilepath.graph.GraphDataBeanContainer;
-import net.ontheagilepath.util.DateTimeStringConverter;
-import net.ontheagilepath.util.FeatureSequenceUtil;
-import net.ontheagilepath.util.FileUtil;
-import net.ontheagilepath.util.JavaBridge;
+import net.ontheagilepath.util.*;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -70,6 +68,8 @@ import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
 @EnableAutoConfiguration
 public class CostOfDelayApplication extends Application {
     private static final Logger log = Logger.getLogger( SequenceSummarizerImpl.class.getName() );
+
+    private JAXBFileHelper fileHelper = new JAXBFileHelperImpl();
 
     private FeatureSequenceModel sequenceModel = new FeatureSequenceModel();
     private TextField projectStartDate;
@@ -152,7 +152,7 @@ public class CostOfDelayApplication extends Application {
             @Override
             public void invalidated(Observable observable) {
                 if (!featureSequenceTextField.isFocused() && featureSequenceTextField.getText()!=null && !featureSequenceTextField.getText().isEmpty()) {
-                    DateTime startDate = new DateTimeStringConverter().fromString(projectStartDate.getText());
+                    DateTime startDate = new DateTimeStringConverter().fromString(sequenceModel.getProjectStartDate());
                     Feature[] featureSequence = FeatureSequenceUtil.getSequenceFromLabels(
                             featureSequenceTextField.getText(),sequenceModel.getFeatures().toArray(new Feature[]{})
                     );
@@ -216,42 +216,7 @@ public class CostOfDelayApplication extends Application {
                 FileChooser fileChooser = new FileChooser();
                 fileChooser.setTitle("Specify file to save");
                 File fileToSave  = fileChooser.showSaveDialog(grid.getScene().getWindow());
-                if (fileToSave != null){
-                    List<Feature> features = sequenceModel.getFeatures();
-                    ObjectFactory objectFactory = new ObjectFactory();
-                    FeatureListType featureList = objectFactory.createFeatureListType();
-                    featureList.setProjectStartDate(projectStartDate.getText());
-                    for (Feature feature : features) {
-                        FeatureType featureType = objectFactory.createFeatureType();
-                        if (feature.getCostOfDelayStartDate()!=null)
-                            featureType.setCostOfDelayStartDate(feature.getCostOfDelayStartDate().toString(PATTERN));
-                        if (feature.getCostOfDelayEndDate()!=null)
-                            featureType.setCostOfDelayEndDate(feature.getCostOfDelayEndDate().toString(PATTERN));
-
-
-                        featureType.setName(feature.getName());
-                        if (feature.getDurationInWeeks()!=null)
-                            featureType.setDurationInWeeks(feature.getDurationInWeeks().toEngineeringString());
-                        if (feature.getCostOfDelayPerWeek()!=null)
-                            featureType.setCostOfDelayPerWeek(feature.getCostOfDelayPerWeek().toEngineeringString());
-
-                        featureType.setCostOfDelayStartWeek(null);
-                        featureType.setCostOfDelayEndWeek(null);
-                        featureList.getFeature().add(featureType);
-                    }
-
-
-                    try {
-                        JAXBElement<FeatureListType> gl =
-                                objectFactory.createFeatures( featureList );
-                        JAXBContext jc = JAXBContext.newInstance( "net.ontheagilepath.binding" );
-                        Marshaller m = jc.createMarshaller();
-                        m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
-                        m.marshal( gl, new FileOutputStream(fileToSave) );
-                    } catch( Exception jbe ){
-                        throw new RuntimeException(jbe);
-                    }
-                }
+                fileHelper.saveToFile(fileToSave,sequenceModel);
             }
         });
         return loadFile;
@@ -261,57 +226,25 @@ public class CostOfDelayApplication extends Application {
         MenuItem loadFile = new MenuItem("Load Input Sample");
         loadFile.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent t) {
-
-                loadInputDataFromStream(getClass().getResourceAsStream("/niceChartData.xml"));
+                sequenceModel = fileHelper.loadInputDataFromStream(getClass().getResourceAsStream("/niceChartData.xml"));
+                updateFromModel();
             }
         });
         return loadFile;
     }
 
-    private void loadInputDataFromFile(File file){
-        if (file!=null && file.exists()){
-            try {
-                loadInputDataFromStream(new FileInputStream(file));
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }
+    private void updateFromModel() {
+        resetSummaries();
+        projectStartDate.setText(sequenceModel.getProjectStartDate());
+        featureTable.setItems(sequenceModel.getFeatures());
     }
 
-    private void loadInputDataFromStream(InputStream fileToOpen) {
-
-        try {
-            JAXBContext jc = JAXBContext.newInstance("net.ontheagilepath.binding");
-            Unmarshaller u = jc.createUnmarshaller();
-            JAXBElement<FeatureListType> doc = (JAXBElement<FeatureListType>) u.unmarshal(fileToOpen);
-            log.info("Number of features to load:"+doc.getValue().getFeature().size());
-            sequenceModel.clear();
-            SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
-            summarizer.clear();
-
-            FeatureListType featureListType = doc.getValue();
-            projectStartDate.setText(featureListType.getProjectStartDate());
-            List<FeatureType> features = featureListType.getFeature();
-            for (FeatureType feature : features) {
-                sequenceModel.addFeature(
-                        feature.getName(),
-                        feature.getCostOfDelayPerWeek(),
-                        feature.getDurationInWeeks(),
-                        feature.getCostOfDelayStartWeek(),
-                        feature.getCostOfDelayEndWeek(),
-                        feature.getCostOfDelayStartDate(),
-                        feature.getCostOfDelayEndDate(),
-                        featureListType.getProjectStartDate()
-                );
-            }
-
-        } catch (Exception e1) {
-            log.info(e1.getMessage());
-            throw new RuntimeException(e1);
-        }
-
-
+    private void resetSummaries(){
+        SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
+        summarizer.clear();
     }
+
+
 
     private MenuItem createLoadFileMenuItem(final GridPane grid) {
         MenuItem loadFile = new MenuItem("Load Input...");
@@ -320,7 +253,8 @@ public class CostOfDelayApplication extends Application {
                 FileChooser fileChooser = new FileChooser();
                 fileChooser.setTitle("Specify file with input to load");
                 File fileToOpen = fileChooser.showOpenDialog(grid.getScene().getWindow());
-                loadInputDataFromFile(fileToOpen);
+                sequenceModel = fileHelper.loadInputDataFromFile(fileToOpen);
+                updateFromModel();
             }
         });
         return loadFile;
@@ -349,7 +283,7 @@ public class CostOfDelayApplication extends Application {
                 sequenceModel.getFeatures().toArray(new Feature[]{}));
 
         GraphDataBeanContainer container = calculator.calculateWeeklyCostOfDelayForSequence(sequence,
-                new DateTimeStringConverter().fromString(projectStartDate.getText()));
+                new DateTimeStringConverter().fromString(sequenceModel.getProjectStartDate()));
 
         webEngine.getLoadWorker().stateProperty()
                 .addListener(new ChangeListener<State>() {
@@ -411,9 +345,17 @@ public class CostOfDelayApplication extends Application {
         Label projectStartDateLabel = new Label("Project Start Date:");
         grid.add(projectStartDateLabel, 0, 1);
 
-        projectStartDate = new TextField();
+        projectStartDate = new TextField(sequenceModel.getProjectStartDate());
         grid.add(projectStartDate, 1, 1);
-        projectStartDate.setText(new SimpleDateFormat(PATTERN).format(new Date()));
+
+        projectStartDate.focusedProperty().addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                if (!projectStartDate.isFocused()) {
+                    sequenceModel.setProjectStartDate(projectStartDate.getText());
+                }
+            }
+        });
     }
 
     private void addFeatureNameInput(GridPane grid) {
@@ -441,7 +383,7 @@ public class CostOfDelayApplication extends Application {
             @Override
             public void invalidated(Observable observable) {
                 if (!costOfDelayStartWeek.isFocused()) {
-                    if (projectStartDate.getText() != null && !projectStartDate.getText().isEmpty()) {
+                    if (sequenceModel.getProjectStartDate() != null && !sequenceModel.getProjectStartDate().isEmpty()) {
                         if (costOfDelayStartWeek.getText() != null && !costOfDelayStartWeek.getText().isEmpty()) {
                             costOfDelayStartDate.setText(
                                     new DateTimeStringConverter()
@@ -465,9 +407,9 @@ public class CostOfDelayApplication extends Application {
             @Override
             public void invalidated(Observable observable) {
                 if (!costOfDelayEndWeek.isFocused()) {
-                    if (projectStartDate.getText()!=null && !projectStartDate.getText().isEmpty()) {
+                    if (sequenceModel.getProjectStartDate()!=null && !sequenceModel.getProjectStartDate().isEmpty()) {
                         if (costOfDelayEndWeek.getText() != null && !costOfDelayEndWeek.getText().isEmpty()) {
-                            costOfDelayEndDate.setText(DateTime.parse(projectStartDate.getText(),
+                            costOfDelayEndDate.setText(DateTime.parse(sequenceModel.getProjectStartDate(),
                                     DateTimeFormat.forPattern(PATTERN)).plusWeeks(Integer.valueOf(costOfDelayEndWeek.getText())).toString(PATTERN));
                         }else{
                             costOfDelayEndDate.setText(null);
@@ -643,8 +585,7 @@ public class CostOfDelayApplication extends Application {
                         costOfDelayStartWeek.getText(),
                         costOfDelayEndWeek.getText(),
                         costOfDelayStartDate.getText(),
-                        costOfDelayEndDate.getText(),
-                        projectStartDate.getText());
+                        costOfDelayEndDate.getText());
             }
         });
     }
@@ -715,7 +656,7 @@ public class CostOfDelayApplication extends Application {
 
             @Override
             public void handle(ActionEvent e) {
-                DateTime startDate = new DateTimeStringConverter().fromString(projectStartDate.getText());
+                DateTime startDate = new DateTimeStringConverter().fromString(sequenceModel.getProjectStartDate());
                 SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
                 summarizer.clear();
                 Feature[] featureSequence = applicationContext.getBean(Sequencer.class).calculateSequence(

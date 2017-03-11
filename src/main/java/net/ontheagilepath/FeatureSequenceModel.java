@@ -2,17 +2,32 @@ package net.ontheagilepath;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import net.ontheagilepath.util.DateTimeStringConverter;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
 
 /**
  * Created by sebastianradics on 27.02.17.
  */
 public class FeatureSequenceModel {
     private ObservableList<Feature> features = FXCollections.observableArrayList();
+    private String projectStartDate = new SimpleDateFormat(PATTERN).format(new Date());
 
-    public void addFeature(String name, String costOfDelayPerWeek, String durationInWeeks, String startWeek, String endWeek, String startDate, String endDate, String projectStart) {
-        DateTime projectStartDate = DateTime.parse(projectStart, DateTimeFormat.forPattern("dd.MM.yyyy"));
+    public String getProjectStartDate() {
+        return projectStartDate;
+    }
+
+    public void setProjectStartDate(String projectStartDate) {
+        this.projectStartDate = projectStartDate;
+    }
+
+    public void addFeature(String name, String costOfDelayPerWeek, String durationInWeeks, String startWeek, String endWeek, String startDate, String endDate) {
+        DateTime projectStartDate = new DateTimeStringConverter().fromString(getProjectStartDate());
         Feature feature = new FeatureBuilder()
                 .withName(name)
                 .build();
@@ -25,11 +40,12 @@ public class FeatureSequenceModel {
             feature.setCostOfDelayEndWeek(projectStartDate,endWeek);
         }
 
+
         if (startDate!=null && !startDate.isEmpty()){
-            feature.setCostOfDelayStartWeek(DateTime.parse(startDate, DateTimeFormat.forPattern("dd.MM.yyyy")));
+            feature.setCostOfDelayStartWeek(new DateTimeStringConverter().fromString(startDate));
         }
         if (endDate!=null && !endDate.isEmpty()){
-            feature.setCostOfDelayEndWeek(DateTime.parse(endDate, DateTimeFormat.forPattern("dd.MM.yyyy")));
+            feature.setCostOfDelayEndWeek(new DateTimeStringConverter().fromString(endDate));
         }
 
         features.add(feature);
