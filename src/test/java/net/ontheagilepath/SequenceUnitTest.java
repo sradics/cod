@@ -112,7 +112,6 @@ public class SequenceUnitTest {
                 feature1, feature2
         }), dt);
 
-        System.out.println(resultSeq[0].toString()+" "+resultSeq[1].toString());
         assertEquals(BigDecimal.ZERO,result);
 
     }

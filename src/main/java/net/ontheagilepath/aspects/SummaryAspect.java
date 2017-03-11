@@ -1,13 +1,18 @@
 package net.ontheagilepath.aspects;
 
+import net.ontheagilepath.Feature;
 import net.ontheagilepath.SequenceSummarizer;
+import net.ontheagilepath.SequenceSummaryData;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.logging.Logger;
 
 /**
@@ -35,6 +40,22 @@ public class SummaryAspect {
         File summary = sequenceSummarizer.printSummary();
         log.info("print summary to file:"+summary);
 
+    }
+
+    @AfterReturning("execution(* processPermutation*(..))")
+    public void afterReturningprocessPermutation()
+    {
+        log.info("processPermutation:");
+
+    }
+
+    @Around("execution(* updateStats*(..))")
+    public Object BeforeUpdateStats(ProceedingJoinPoint pjp) throws Throwable
+    {
+        sequenceSummarizer.addSummary(new SequenceSummaryData(
+                (BigDecimal)pjp.getArgs()[2], (Feature[])pjp.getArgs()[1]));
+        Object retVal = pjp.proceed();
+        return retVal;
     }
 
 

@@ -21,8 +21,9 @@ public class SequencerImpl implements Sequencer {
     @Autowired
     private TotalCostOfDelayCalculator totalCostOfDelayCalculator;
 
+
     @Autowired
-    private SequenceSummarizer sequenceSummarizer;
+    private SequencerImpl sequencer;
 
     @Override
     public Feature[] calculateSequence(Collection<Feature> features, DateTime startDate){
@@ -36,28 +37,35 @@ public class SequencerImpl implements Sequencer {
         Feature[] featuresForSequenceTrials = features.toArray(new Feature[]{});
         Generator<Integer> generator = getiCombinatoricsVectors(features);
 
-        BigDecimal currentMinCostOfDelay = null;
-        Feature[] featuresForSequenceMinTrial = null;
-        long counter=0;
+        PermutationTrialStats stats = new PermutationTrialStats();
         for (ICombinatoricsVector<Integer> perm : generator) {
-            counter++;
-            Feature[] featuresForSequenceCurrentTrial = getFeaturesInSequenceForCurrentTrial(featuresForSequenceTrials, perm);
-            BigDecimal costOfDelayForSequence = totalCostOfDelayCalculator.calculateTotalCostOfDelayForSequence(featuresForSequenceCurrentTrial, startDate);
-
-            sequenceSummarizer.addSummary(new SequenceSummaryData(costOfDelayForSequence,featuresForSequenceCurrentTrial));
-            if (currentMinCostOfDelay==null){
-                currentMinCostOfDelay = costOfDelayForSequence;
-                featuresForSequenceMinTrial =featuresForSequenceCurrentTrial;
-            } else if (costOfDelayForSequence.compareTo(currentMinCostOfDelay)==-1){
-                featuresForSequenceMinTrial =featuresForSequenceCurrentTrial;
-                currentMinCostOfDelay = costOfDelayForSequence;
-            }
-            if (counter % 100000 ==0)
-                log.info("counter"+counter);
+            sequencer.processPermutation(startDate, featuresForSequenceTrials, stats, perm);
         }
 
 
-        return featuresForSequenceMinTrial;
+        return stats.featuresForSequenceMinTrial;
+    }
+
+    void processPermutation(DateTime startDate, Feature[] featuresForSequenceTrials, PermutationTrialStats stats, ICombinatoricsVector<Integer> perm) {
+        Feature[] featuresForSequenceCurrentTrial = getFeaturesInSequenceForCurrentTrial(featuresForSequenceTrials, perm);
+        BigDecimal costOfDelayForSequence = totalCostOfDelayCalculator.calculateTotalCostOfDelayForSequence(featuresForSequenceCurrentTrial, startDate);
+
+        sequencer.updateStats(stats, featuresForSequenceCurrentTrial, costOfDelayForSequence);
+    }
+
+    void updateStats(PermutationTrialStats stats, Feature[] featuresForSequenceCurrentTrial, BigDecimal costOfDelayForSequence) {
+        if (stats.currentMinCostOfDelay==null){
+            stats.currentMinCostOfDelay = costOfDelayForSequence;
+            stats.featuresForSequenceMinTrial =featuresForSequenceCurrentTrial;
+        } else if (costOfDelayForSequence.compareTo(stats.currentMinCostOfDelay)==-1){
+            stats.featuresForSequenceMinTrial =featuresForSequenceCurrentTrial;
+            stats.currentMinCostOfDelay = costOfDelayForSequence;
+        }
+    }
+
+    public static class PermutationTrialStats{
+        public BigDecimal currentMinCostOfDelay = null;
+        public Feature[] featuresForSequenceMinTrial = null;
     }
 
     private Feature[] getFeaturesInSequenceForCurrentTrial(Feature[] featuresForSequenceTrials, ICombinatoricsVector<Integer> perm) {

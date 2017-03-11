@@ -94,7 +94,7 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
             ).map(Function.identity());
 
             Files.write(sortedFile, sortedLines::iterator, StandardOpenOption.CREATE);
-            System.out.println("all sequences can be found sorted in file: "+sorted.getAbsolutePath());
+            log.info("all sequences can be found sorted in file: "+sorted.getAbsolutePath());
             return sorted;
 
 

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.aspectj.EnableSpringConfigured;
 
 @Configuration
 @EnableSpringConfigured
-@EnableAspectJAutoProxy
+//@EnableAspectJAutoProxy
+@EnableAspectJAutoProxy(proxyTargetClass=true)
 public class AppConfig {
 }
