@@ -24,42 +24,102 @@ import java.util.stream.Stream;
 public class SequenceSummarizerImpl implements SequenceSummarizer {
     private static final Logger log = Logger.getLogger( SequenceSummarizerImpl.class.getName() );
     private List<SequenceSummaryData> summaryDataList = new ArrayList<SequenceSummaryData>();
-    private File tempFile;
-    private File sorted;
+
+    File getTempFile() {
+        return _tempFile;
+    }
+
+    void setTempFile(File tempFile) {
+        this._tempFile = tempFile;
+    }
+
+    File getSorted() {
+        return _sorted;
+    }
+
+    void setSorted(File sorted) {
+        this._sorted = sorted;
+    }
+
+    private File _tempFile;
+    private File _sorted;
     private static final int FILE_USAGE_THRESHOLD = 10000;
     private static final String SEARCHPATTERN = "totalCostOfDelay=";
+    private SequenceSummaryData totalCostOfDelayMin = null;
+    private SequenceSummaryData totalCostOfDelayMax = null;
+
 
     public SequenceSummarizerImpl(){
-        tempFile = new File(FileUtils.getTempDirectory(),"codtempdata");
-        sorted = new File(FileUtils.getTempDirectory(),"codtempdata_sorted");
+        initFiles();
+    }
 
-        if (tempFile.exists()) {
-            tempFile.delete();
+    void initFiles(){
+        setTempFile(createTempFile());
+        setSorted(createTempFileSorted());
+
+        if (getTempFile().exists()) {
+            getTempFile().delete();
         }
-        if (sorted.exists())
-            sorted.delete();
+        if (getSorted().exists())
+            getSorted().delete();
 
         try {
-            tempFile.createNewFile();
-            sorted.createNewFile();
-            log.info("write summary to file:"+tempFile.getAbsolutePath());
+            getTempFile().createNewFile();
+            getSorted().createNewFile();
+            log.info("write summary to file:"+getTempFile().getAbsolutePath());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    int getFileFlushThreshold(){
+        return FILE_USAGE_THRESHOLD;
+    }
+
+    File createTempFileSorted() {
+        return new File(FileUtils.getTempDirectory(),"codtempdata_sorted");
+    }
+
+    File createTempFile() {
+        return new File(FileUtils.getTempDirectory(),"codtempdata");
+    }
+
+
     @Override
     public void addSummary(SequenceSummaryData summary){
+        checkForNewMin(summary);
+        checkForNewMax(summary);
+
         summaryDataList.add(summary);
-        if (summaryDataList.size()>FILE_USAGE_THRESHOLD){
+        if (summaryDataList.size()>getFileFlushThreshold()){
             flush();
+        }
+    }
+
+    private void checkForNewMax(SequenceSummaryData summary) {
+        if (totalCostOfDelayMax==null){
+            totalCostOfDelayMax = summary;
+        }else{
+            if (totalCostOfDelayMax.getTotalCostOfDelay().compareTo(summary.getTotalCostOfDelay())==-1){
+                totalCostOfDelayMax = summary;
+            }
+        }
+    }
+
+    private void checkForNewMin(SequenceSummaryData summary) {
+        if (totalCostOfDelayMin==null){
+            totalCostOfDelayMin = summary;
+        }else{
+            if (totalCostOfDelayMin.getTotalCostOfDelay().compareTo(summary.getTotalCostOfDelay())==1){
+                totalCostOfDelayMin = summary;
+            }
         }
     }
 
     private void flush() {
         try {
-            log.info("flush next "+summaryDataList.size()+" lines to file: "+tempFile.getAbsolutePath());
-            FileUtils.writeLines(tempFile,summaryDataList,true);
+            log.info("flush next "+summaryDataList.size()+" lines to file: "+getTempFile().getAbsolutePath());
+            FileUtils.writeLines(getTempFile(),summaryDataList,true);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -71,13 +131,13 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
     @Override
     public File printSummary(){
         flush();
-        Path initialFile = Paths.get(tempFile.getAbsolutePath());
-        sorted = new File(FileUtils.getTempDirectory(),"codtempdata_sorted");
+        Path initialFile = Paths.get(getTempFile().getAbsolutePath());
+        setSorted(createTempFileSorted());
 
-        Path sortedFile = Paths.get(sorted.getAbsolutePath());
+        Path sortedFile = Paths.get(getSorted().getAbsolutePath());
         try {
-            sorted.delete();
-            sorted.createNewFile();
+            getSorted().delete();
+            getSorted().createNewFile();
             Stream<CharSequence> sortedLines = Files.lines(initialFile).sorted(
                     new Comparator<String>() {
                         @Override
@@ -94,40 +154,55 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
             ).map(Function.identity());
 
             Files.write(sortedFile, sortedLines::iterator, StandardOpenOption.CREATE);
-            log.info("all sequences can be found sorted in file: "+sorted.getAbsolutePath());
-            return sorted;
-
+            log.info("all sequences can be found sorted in file: "+getSorted().getAbsolutePath());
+            log.info("Min:"+(totalCostOfDelayMin!=null?totalCostOfDelayMin.toString():"-")+
+                    " Max:"+(totalCostOfDelayMax!=null?totalCostOfDelayMax.toString():"-"));
+            return getSorted();
 
         }catch (Exception e){
             throw new RuntimeException(e);
         }
+
     }
 
     @Override
     public void clear() {
+        totalCostOfDelayMin = null;
+        totalCostOfDelayMax = null;
         summaryDataList.clear();
-        tempFile = new File(FileUtils.getTempDirectory(),"codtempdata");
+        setTempFile(createTempFile());
+        setSorted(createTempFileSorted());
 
         try {
-            if (sorted!=null && sorted.exists()) {
-                sorted.delete();
-                sorted.createNewFile();
+            if (getSorted()!=null && getSorted().exists()) {
+                getSorted().delete();
+                getSorted().createNewFile();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         try {
-            tempFile.delete();
-            tempFile.createNewFile();
+            getTempFile().delete();
+            getTempFile().createNewFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        log.info("clear called - new tempfile is: "+tempFile.getAbsolutePath());
+        log.info("clear called - new tempfile is: "+getTempFile().getAbsolutePath());
     }
 
     @Override
     public File getCurrentSummary() {
-        return sorted;
+        return getSorted();
+    }
+
+    @Override
+    public SequenceSummaryData getTotalCostOfDelayMax() {
+        return totalCostOfDelayMax;
+    }
+
+    @Override
+    public SequenceSummaryData getTotalCostOfDelayMin() {
+        return totalCostOfDelayMin;
     }
 }

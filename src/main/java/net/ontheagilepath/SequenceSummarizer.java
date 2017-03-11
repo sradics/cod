@@ -7,6 +7,8 @@ import java.io.File;
  */
 public interface SequenceSummarizer {
     void addSummary(SequenceSummaryData summary);
+    SequenceSummaryData getTotalCostOfDelayMax();
+    SequenceSummaryData getTotalCostOfDelayMin();
 
     File printSummary();
 
