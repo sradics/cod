@@ -32,7 +32,7 @@
     </style>
 </head>
 <body>
-<svg width="750" height="350">
+<svg width="850" height="350">
 
 </svg>
 <script type="text/javascript">
@@ -183,11 +183,11 @@
 
     var mapWeeks = new Map();
     var totalMax = 0;
-    var canvasWidth=d3.select("svg").attr("width")-50;
+    var canvasWidth=d3.select("svg").attr("width")-100;
     var width = 50;
     var topPadding = 20;
     var height = d3.select("svg").attr("height")-50-topPadding;
-    var leftPadding = 50;
+    var leftPadding = 100;
     var colors = ["green","blue","cyan","purple","red","lime","#996633","Fuchsia","#99ff33"]
     var defaultColor="#AAAAAA";
 
@@ -212,6 +212,11 @@
         }
     }
 
+    var totalCoD = 0;
+    mapWeeks.forEach(function (s,i,o){
+        totalCoD=totalCoD+s;
+        //console.log(s+":"+i+":"+o);
+    });
 
 
     var x = d3.scaleLinear()
@@ -221,11 +226,12 @@
                 return d.week;
             })+1
         ])
-        .range([0,canvasWidth]);
+        .range([0,canvasWidth-leftPadding]);
 
     var xAxis =  d3.axisBottom(x);
     xAxis.tickValues(xAxisTickValues);
     xAxis.tickFormat(d3.format(",.0f"));
+    xAxis.tickSizeInner(45);
 
     var xAxisNumbers =  d3.axisBottom(x);
     xAxisNumbers.tickValues(xAxisTickValues);
@@ -339,6 +345,38 @@
             return d.currentFeatureInProgress;
         });
 
+
+    function getMaxPerWeek(week) {
+        maxPerWeek = mapWeeks.get(week);
+        if (maxPerWeek == null){
+            maxPerWeek = 0;
+        }
+        return ""+maxPerWeek;
+    }
+
+
+    d3.select("svg").selectAll("text")
+        .data(weekData,function(d){return null;})
+        .enter()
+        .append("text")
+        .attr("x", function(d,i) {
+            return x(d.week)+x(2)/2+leftPadding;
+        })
+        .attr("y", function(d,i) {
+            return topPadding-10;
+        })
+        .attr("text-anchor", "middle")
+        .attr("font-family", "sans-serif")
+        .attr("font-style", "italic")
+        .attr("font-weight", "bold")
+        .attr("font-size", function(d,i) {
+            textSize=getTextSize(getMaxPerWeek(weekData[i].week),12,x(2));
+            return textSize + "px"; })
+        .attr("fill", "black")
+        .text(function(d,i) {
+            return getMaxPerWeek(weekData[i].week);
+        });
+
     d3.select("svg").append("g")
         .attr("transform", "translate("+leftPadding+","+(height+topPadding)+")")
         .attr("class", "xaxis")
@@ -353,6 +391,58 @@
         .attr("transform", "translate("+leftPadding+","+topPadding+")")
         //.attr("class", "xaxis")
         .call(yAxis);
+
+    d3.select("svg").append("g").append("text")
+        .text(function(d,i) {
+            return "Week";
+        })
+        .attr("font-family", "sans-serif")
+        .attr("font-style", "italic")
+        .attr("font-weight", "bold")
+        .attr("font-size", "11px")
+        .attr("transform", "translate("+(0)+","+(height+topPadding+17)+")");
+
+    d3.select("svg").append("g").append("text")
+        .text(function(d,i) {
+            return "Feature Sequence";
+        })
+        .attr("font-family", "sans-serif")
+        .attr("font-style", "italic")
+        .attr("font-weight", "bold")
+        .attr("font-size", "11px")
+        .attr("transform", "translate("+(0)+","+(height+topPadding+40)+")");
+
+    d3.select("svg").append("g").append("text")
+        .text(function(d,i) {
+            return "Total CoD";
+        })
+        .attr("font-family", "sans-serif")
+        .attr("font-style", "italic")
+        .attr("font-weight", "bold")
+        .attr("font-size", "11px")
+        .attr("transform", "translate("+(0)+","+(topPadding-10)+")");
+
+    d3.select("svg").append("g").append("text")
+        .text(function(d,i) {
+            return "∑"+totalCoD;
+        })
+        .attr("font-family", "sans-serif")
+        .attr("font-style", "italic")
+        .attr("font-weight", "bold")
+        .attr("font-size", "13px")
+        .attr("transform", "translate("+(canvasWidth)+","+(topPadding-10)+")");
+
+    d3.select("svg").append("g").append("text")
+        .text(function(d,i) {
+            return "Cost Of Delay";
+        })
+        .attr("font-family", "sans-serif")
+        //.attr("font-style", "italic")
+        .attr("font-stretch", "ultra-expanded")
+        .attr("font-weight", "bold")
+        .attr("font-size", "11px")
+        .attr("transform", " rotate(-90,40,"+(height+topPadding+40)/2+") translate("+(0)+","+(height+topPadding+40)/2+")");
+
 
 </script>
 </body>
