@@ -10,10 +10,10 @@ It's all about Cost of Delay. Currently this application can help you visualizin
 
 ##Run it
 ### From you maven build
-* java -jar target/cod-0.1.1-SNAPSHOT.jar
+* java -jar target/cod-0.1.2-SNAPSHOT.jar
 
 ### From binary download
-* java - jar cod-0.1.RELEASE.jar
+* java - jar cod-0.1.1.RELEASE.jar
 
 
 ##A small documentation
