@@ -21,9 +21,10 @@ import java.util.stream.Stream;
  * Created by sebastianradics on 24.02.17.
  */
 @Component
-public class SequenceSummarizerImpl implements SequenceSummarizer {
+public class SequenceSummarizerImpl  implements SequenceSummarizer {
     private static final Logger log = Logger.getLogger( SequenceSummarizerImpl.class.getName() );
     private List<SequenceSummaryData> summaryDataList = new ArrayList<SequenceSummaryData>();
+
 
     File getTempFile() {
         return _tempFile;
@@ -205,4 +206,6 @@ public class SequenceSummarizerImpl implements SequenceSummarizer {
     public SequenceSummaryData getTotalCostOfDelayMin() {
         return totalCostOfDelayMin;
     }
+
+
 }

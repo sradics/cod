@@ -3,11 +3,13 @@ package net.ontheagilepath;/**
  */
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import javafx.concurrent.Worker.State;
 import javafx.event.ActionEvent;
@@ -29,6 +31,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.converter.BigDecimalStringConverter;
+import net.ontheagilepath.aspects.CancelCalculationEvent;
+import net.ontheagilepath.aspects.MessageEvent;
+import net.ontheagilepath.aspects.ProgressUpdateAspect;
+import net.ontheagilepath.aspects.SummaryFinishedListener;
 import net.ontheagilepath.graph.GraphDataBeanContainer;
 import net.ontheagilepath.util.*;
 import org.joda.time.DateTime;
@@ -45,6 +51,7 @@ import org.springframework.context.annotation.FilterType;
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Observer;
 import java.util.logging.Logger;
 
 import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
@@ -57,6 +64,7 @@ import static net.ontheagilepath.util.DateTimeStringConverter.PATTERN;
 @EnableAutoConfiguration
 public class CostOfDelayApplication extends Application {
     private static final Logger log = Logger.getLogger( CostOfDelayApplication.class.getName() );
+    private Task worker;
 
     private FeatureSequenceModel sequenceModel = new FeatureSequenceModel();
     private TextField projectStartDate;
@@ -69,6 +77,8 @@ public class CostOfDelayApplication extends Application {
     private TextField featureBuildDuration;
     private TextField featureSequenceTextField;
     private TextField maxFeatureSequenceTextField;
+
+    private ProgressBar progressBar;
 
     private Button addFeatureButton;
     private Button clearButton;
@@ -100,10 +110,36 @@ public class CostOfDelayApplication extends Application {
         VBox footer = new VBox();
         footer.setId("footer");
         statusTextField = new TextField();
+
+        SummaryFinishedListener listener = applicationContext.getBean(SummaryFinishedListener.class);
+        listener.addObserver(new Observer() {
+            @Override
+            public void update(java.util.Observable o, Object arg) {
+                Platform.runLater(new Runnable() {//UI update must run the JavaFX thread!
+                    @Override
+                    public void run() {
+                        statusTextField.setText(((MessageEvent)arg).getMessage());
+                    }
+                });
+            }
+        });
+
         statusTextField.setEditable(false);
         footer.getChildren().add(statusTextField);
 
-        vBox.getChildren().addAll(menuBar, grid,footer);
+        final HBox hb = new HBox();
+        hb.setSpacing(5);
+        hb.setId("menubarBox");
+
+        //hb.setAlignment(Pos.CENTER_LEFT);
+        hb.setAlignment(Pos.CENTER_LEFT);
+        progressBar = new ProgressBar(0.0);
+        progressBar.setMinWidth(290);
+        ProgressUpdateAspect progressUpdateAspect = applicationContext.getBean(ProgressUpdateAspect.class);
+        progressUpdateAspect.setProgressBar(progressBar);
+        hb.getChildren().addAll(menuBar,progressBar);
+
+        vBox.getChildren().addAll(hb, grid,footer);
         mainScene = new Scene(vBox, SCREEN_WIDTH, SCREEN_HEIGHT);
         mainScene.getStylesheets().add(SCREEN_CSS);
 
@@ -200,6 +236,7 @@ public class CostOfDelayApplication extends Application {
         MenuItem saveFile = createSaveFileMenuItem(grid);
 
         menuFile.getItems().addAll(loadFile,loadFileSample,saveFile);
+        menuBar.setId("menubar");
         return menuBar;
     }
 
@@ -230,9 +267,15 @@ public class CostOfDelayApplication extends Application {
     private void updateFromModel() {
         projectStartDate.setText(sequenceModel.getProjectStartDate());
         featureTable.setItems(sequenceModel.getFeatures());
+        resetCalculationDisplay();
     }
 
-
+    private void resetCalculationDisplay() {
+        codValueLabel.setText("");
+        maxCodValueLabel.setText("");
+        featureSequenceTextField.setText("");
+        maxFeatureSequenceTextField.setText("");
+    }
 
 
     private MenuItem createLoadFileMenuItem(final GridPane grid) {
@@ -596,6 +639,7 @@ public class CostOfDelayApplication extends Application {
                 sequenceModel.clear();
                 SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
                 summarizer.clear();
+                resetCalculationDisplay();
             }
         });
     }
@@ -645,10 +689,39 @@ public class CostOfDelayApplication extends Application {
 
             @Override
             public void handle(ActionEvent e) {
+                if (!calculateSequenceButton.getText().equals("Cancel calculation")){
+                    calculateSequenceButton.setText("Cancel calculation");
+                    statusTextField.setText("Start sequence calculation");
+                    progressBar.setProgress(0);
+                    worker = createWorker();
+                    worker.messageProperty().addListener(new ChangeListener<String>() {
+                        public void changed(ObservableValue<? extends String> observable,
+                                            String oldValue, String newValue) {
+                            progressBar.setProgress(1);
+                        }
+                    });
+                    Thread t = new Thread(worker);
+                    t.setDaemon(true);
+                    t.start();
+                }else{
+                    calculateSequenceButton.setText("Calculate Sequence");
+                    applicationContext.publishEvent(new CancelCalculationEvent(this));
+                    progressBar.setProgress(0);
+                }
+
+            }
+        });
+    }
+
+    private Task createWorker(){
+        return new Task(){
+            @Override
+            protected Object call() throws Exception {
                 DateTime startDate = new DateTimeStringConverter().fromString(sequenceModel.getProjectStartDate());
                 Feature[] featureSequence = applicationContext.getBean(Sequencer.class).calculateSequence(
                         sequenceModel.getFeatures(),startDate);
-                statusTextField.setText("Wrote full sequence calculation to: "+applicationContext.getBean(SequenceSummarizer.class).getCurrentSummary().getAbsolutePath());
+                String cod = applicationContext.getBean(TotalCostOfDelayCalculator.class)
+                        .calculateTotalCostOfDelayForSequence(featureSequence,startDate).toString();
 
                 StringBuilder sequenceResult = new StringBuilder();
                 boolean previousExists = false;
@@ -661,17 +734,24 @@ public class CostOfDelayApplication extends Application {
                 }
 
                 SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
+                Platform.runLater(new Runnable() {//UI update must run the JavaFX thread!
+                    @Override
+                    public void run() {
+                        featureSequenceTextField.setText(sequenceResult.toString());
+                        codValueLabel.setText(cod);
 
-                featureSequenceTextField.setText(sequenceResult.toString());
-                codValueLabel.setText(applicationContext.getBean(TotalCostOfDelayCalculator.class)
-                        .calculateTotalCostOfDelayForSequence(featureSequence,startDate).toString());
+                        maxCodValueLabel.setText(summarizer.getTotalCostOfDelayMax().getTotalCostOfDelay().toString());
+                        maxFeatureSequenceTextField.setText(
+                                convertStringList(summarizer.getTotalCostOfDelayMax().getFeatureSequence()));
+                        calculateSequenceButton.setText("Calculate Sequence");
+                    }
+                });
 
-                maxCodValueLabel.setText(summarizer.getTotalCostOfDelayMax().getTotalCostOfDelay().toString());
-                maxFeatureSequenceTextField.setText(
-                        convertStringList(summarizer.getTotalCostOfDelayMax().getFeatureSequence()));
-
+                updateProgress(100,100);
+                return true;
             }
-        });
+        };
+
     }
 
     private String convertStringList(List<String> list){

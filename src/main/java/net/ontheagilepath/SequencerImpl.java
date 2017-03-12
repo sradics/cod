@@ -1,10 +1,12 @@
 package net.ontheagilepath;
 
+import net.ontheagilepath.aspects.CancelCalculationEvent;
 import org.joda.time.DateTime;
 import org.paukov.combinatorics.Factory;
 import org.paukov.combinatorics.Generator;
 import org.paukov.combinatorics.ICombinatoricsVector;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,8 +18,9 @@ import java.util.logging.Logger;
  * Created by sebastianradics on 21.02.17.
  */
 @Component
-public class SequencerImpl implements Sequencer {
+public class SequencerImpl implements Sequencer,ApplicationListener<CancelCalculationEvent> {
     private static final Logger log = Logger.getLogger( SequencerImpl.class.getName() );
+    private boolean cancel = false;
     @Autowired
     private TotalCostOfDelayCalculator totalCostOfDelayCalculator;
 
@@ -26,7 +29,13 @@ public class SequencerImpl implements Sequencer {
     private SequencerImpl sequencer;
 
     @Override
+    public void onApplicationEvent(CancelCalculationEvent event) {
+        cancel = true;
+    }
+
+    @Override
     public Feature[] calculateSequence(Collection<Feature> features, DateTime startDate){
+        cancel = false;
         if (features.isEmpty())
             return new Feature[]{};
         if (features.size()==1)
@@ -36,14 +45,27 @@ public class SequencerImpl implements Sequencer {
 
         Feature[] featuresForSequenceTrials = features.toArray(new Feature[]{});
         Generator<Integer> generator = getiCombinatoricsVectors(features);
+        long numberOfPermutations = generator.getNumberOfGeneratedObjects();
+        long counter=0;
 
         PermutationTrialStats stats = new PermutationTrialStats();
         for (ICombinatoricsVector<Integer> perm : generator) {
+            counter++;
+            sequencer.updateProgress(counter,numberOfPermutations);
             sequencer.processPermutation(startDate, featuresForSequenceTrials, stats, perm);
+            if (cancel){
+                break;
+            }
         }
 
 
         return stats.featuresForSequenceMinTrial;
+    }
+
+    void updateProgress(long currentPermutation, long totalPermutations){
+        if (currentPermutation % 10000==0){
+            log.info("processed:" +currentPermutation+" out of: "+totalPermutations);
+        }
     }
 
     void processPermutation(DateTime startDate, Feature[] featuresForSequenceTrials, PermutationTrialStats stats, ICombinatoricsVector<Integer> perm) {

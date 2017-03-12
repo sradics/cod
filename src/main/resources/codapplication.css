@@ -23,6 +23,10 @@
     -fx-background: rgb(225, 255, 255);
 }
 
+#menubar{
+    -fx-min-width: 600px;
+}
+
 #graphScrollpane,#browser,#flowpane{
     -fx-opacity: 0.9;
     -fx-background: rgb(255, 255, 255);
