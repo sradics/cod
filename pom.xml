@@ -4,7 +4,7 @@
 
   <groupId>net.ontheagilepath</groupId>
   <artifactId>cod</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.1.1.RELEASE</version>
   <packaging>jar</packaging>
 
   <name>cod</name>
