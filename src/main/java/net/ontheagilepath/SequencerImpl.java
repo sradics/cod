@@ -10,8 +10,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -60,6 +59,19 @@ public class SequencerImpl implements Sequencer,ApplicationListener<CancelCalcul
 
 
         return stats.featuresForSequenceMinTrial;
+    }
+
+    @Override
+    public Feature[] calculateWsjfSequence(Collection<Feature> features) {
+        ArrayList<Feature> featureList = new ArrayList<Feature>();
+        featureList.addAll(features);
+        featureList.sort(new Comparator<Feature>() {
+            @Override
+            public int compare(Feature o1, Feature o2) {
+                return o1.calculateCD3().compareTo(o2.calculateCD3())*-1;
+            }
+        });
+        return featureList.toArray(new Feature[]{});
     }
 
     void updateProgress(long currentPermutation, long totalPermutations){

@@ -50,7 +50,6 @@ import org.springframework.context.annotation.FilterType;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Observer;
 import java.util.logging.Logger;
 
@@ -77,6 +76,7 @@ public class CostOfDelayApplication extends Application {
     private TextField featureBuildDuration;
     private TextField featureSequenceTextField;
     private TextField maxFeatureSequenceTextField;
+    private TextField wsjfFeatureSequenceTextField;
 
     private ProgressBar progressBar;
 
@@ -87,6 +87,7 @@ public class CostOfDelayApplication extends Application {
     private Button calculateSequenceButton;
     private Label codValueLabel;
     private Label maxCodValueLabel;
+    private Label wsjfCodValueLabel;
     private TextField statusTextField;
     private TableView<Feature> featureTable;
     private Scene mainScene;
@@ -172,6 +173,7 @@ public class CostOfDelayApplication extends Application {
         Label sequenceLabel = new Label("Best Sequence:");
         grid.add(sequenceLabel, 3, 6);
         grid.add(new Label("Worst Sequence:"), 3, 7);
+        grid.add(new Label("Wsjf Sequence:"), 3, 8);
 
         featureSequenceTextField = new TextField();
         featureSequenceTextField.focusedProperty().addListener(new InvalidationListener() {
@@ -197,6 +199,13 @@ public class CostOfDelayApplication extends Application {
         grid.add(maxFeatureSequenceTextField, 4, 7, 2,1);
         maxCodValueLabel = new Label("");
         grid.add(maxCodValueLabel, 6, 7);
+
+        wsjfFeatureSequenceTextField = new TextField();
+        wsjfFeatureSequenceTextField.setEditable(false);
+        grid.add(wsjfFeatureSequenceTextField, 4, 8, 2,1);
+        wsjfCodValueLabel = new Label("");
+        grid.add(wsjfCodValueLabel, 6, 8);
+
     }
 
     private void addColumnConstraints(VBox vBox, GridPane grid) {
@@ -273,8 +282,10 @@ public class CostOfDelayApplication extends Application {
     private void resetCalculationDisplay() {
         codValueLabel.setText("");
         maxCodValueLabel.setText("");
+        wsjfCodValueLabel.setText("");
         featureSequenceTextField.setText("");
         maxFeatureSequenceTextField.setText("");
+        wsjfFeatureSequenceTextField.setText("");
     }
 
 
@@ -478,16 +489,30 @@ public class CostOfDelayApplication extends Application {
     }
 
     private void addFeatureTable(GridPane grid) {
+        final VBox vbox = createFeatureTable();
+        grid.add(vbox,0,10,10,10);
+    }
+
+    private VBox createFeatureTable() {
         featureTable = new TableView(sequenceModel.getFeatures());
 
         featureTable.setEditable(true);
 
         TableColumn nrCol = new TableColumn("Nr");
+        nrCol.setId("column_nr");
         TableColumn nameCol = new TableColumn("Name");
+        nameCol.setId("column_name");
         TableColumn codPerWeekCol = new TableColumn("CoD/Week");
+        codPerWeekCol.setId("column_cod_per_week");
         TableColumn durationCol = new TableColumn("Duration");
+        durationCol.setId("column_duration");
         TableColumn codStartDateCol = new TableColumn("CoD Start Date");
+        codStartDateCol.setId("column_cod_start_date");
         TableColumn codEndDateCol = new TableColumn("CoD End Date");
+        codEndDateCol.setId("column_cod_end_date");
+        TableColumn codWsjf = new TableColumn("CoD/Duration");
+        codWsjf.setId("column_wsjf");
+
 
         nrCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures, ObservableValue>() {
             @Override
@@ -495,6 +520,7 @@ public class CostOfDelayApplication extends Application {
                 return new ReadOnlyObjectWrapper(param.getTableView().getItems().indexOf(param.getValue()));
             }
         });
+        nrCol.setEditable(false);
 
         nameCol.setCellValueFactory(
                 new PropertyValueFactory<Feature,String>("name")
@@ -525,7 +551,6 @@ public class CostOfDelayApplication extends Application {
         );
 
 
-
         durationCol.setCellValueFactory(
                 new PropertyValueFactory<Feature,BigDecimal>("durationInWeeks")
         );
@@ -539,7 +564,6 @@ public class CostOfDelayApplication extends Application {
                     }
                 }
         );
-
 
 
         codStartDateCol.setCellValueFactory(
@@ -571,8 +595,20 @@ public class CostOfDelayApplication extends Application {
                 }
         );
 
+        codWsjf.setCellValueFactory(
+                new Callback<TableColumn.CellDataFeatures<Feature,BigDecimal>, ObservableValue<BigDecimal>>(){
+                    @Override
+                    public ObservableValue<BigDecimal> call(TableColumn.CellDataFeatures<Feature, BigDecimal> param) {
+                        Feature feature = param.getValue();
+                        return new ReadOnlyObjectWrapper<BigDecimal>(feature.calculateCD3());
+                    }
+                }
+        );
+        codWsjf.setCellFactory(TextFieldTableCell.forTableColumn(new BigDecimalStringConverter()));
+        codWsjf.setEditable(false);
 
-        featureTable.getColumns().addAll(nrCol,nameCol, codPerWeekCol, durationCol,codStartDateCol,codEndDateCol);
+
+        featureTable.getColumns().addAll(nrCol,nameCol, codPerWeekCol, durationCol,codStartDateCol,codEndDateCol,codWsjf);
 
         final Label label = new Label("Features");
         label.setFont(new Font("Arial", 20));
@@ -580,7 +616,7 @@ public class CostOfDelayApplication extends Application {
         vbox.setSpacing(5);
         vbox.setPadding(new Insets(10, 0, 0, 10));
         vbox.getChildren().addAll(label, featureTable);
-        grid.add(vbox,0,9,10,10);
+        return vbox;
     }
 
     private Feature getFeatureFromTablePosition(TableColumn.CellEditEvent<Feature, ?> t) {
@@ -723,26 +759,24 @@ public class CostOfDelayApplication extends Application {
                 String cod = applicationContext.getBean(TotalCostOfDelayCalculator.class)
                         .calculateTotalCostOfDelayForSequence(featureSequence,startDate).toString();
 
-                StringBuilder sequenceResult = new StringBuilder();
-                boolean previousExists = false;
-                for (Feature feature : featureSequence) {
-                    if (previousExists) {
-                        sequenceResult.append(",");
-                    }
-                    sequenceResult.append(feature.getName());
-                    previousExists = true;
-                }
+                Feature[] featureSequenceWsjf = applicationContext.getBean(Sequencer.class).calculateWsjfSequence(
+                        sequenceModel.getFeatures());
+                String codWsjf = applicationContext.getBean(TotalCostOfDelayCalculator.class)
+                        .calculateTotalCostOfDelayForSequence(featureSequenceWsjf,startDate).toString();
 
                 SequenceSummarizer summarizer = applicationContext.getBean(SequenceSummarizer.class);
                 Platform.runLater(new Runnable() {//UI update must run the JavaFX thread!
                     @Override
                     public void run() {
-                        featureSequenceTextField.setText(sequenceResult.toString());
                         codValueLabel.setText(cod);
+                        featureSequenceTextField.setText(getSequenceAsString(featureSequence));
 
                         maxCodValueLabel.setText(summarizer.getTotalCostOfDelayMax().getTotalCostOfDelay().toString());
                         maxFeatureSequenceTextField.setText(
-                                convertStringList(summarizer.getTotalCostOfDelayMax().getFeatureSequence()));
+                                StringUtil.convertStringList(summarizer.getTotalCostOfDelayMax().getFeatureSequence()));
+
+                        wsjfCodValueLabel.setText(codWsjf);
+                        wsjfFeatureSequenceTextField.setText(getSequenceAsString(featureSequenceWsjf));
                         calculateSequenceButton.setText("Calculate Sequence");
                     }
                 });
@@ -754,18 +788,19 @@ public class CostOfDelayApplication extends Application {
 
     }
 
-    private String convertStringList(List<String> list){
-        StringBuilder result = new StringBuilder();
-        boolean append = false;
-        for (String s : list) {
-            if (append){
-                result.append(",");
+    private String getSequenceAsString(Feature[] featureSequence) {
+        StringBuilder sequenceResultStb = new StringBuilder();
+        boolean previousExists = false;
+        for (Feature feature : featureSequence) {
+            if (previousExists) {
+                sequenceResultStb.append(",");
             }
-            append = true;
-            result.append(s);
+            sequenceResultStb.append(feature.getName());
+            previousExists = true;
         }
-        return result.toString();
+        return sequenceResultStb.toString();
     }
+
 
     public static ApplicationContext getApplicationContext() {
         return applicationContext;

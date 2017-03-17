@@ -45,3 +45,32 @@
 #footer{
     -fx-background: rgb(255, 255, 255);
 }
+
+#column_nr{
+    -fx-pref-width: 40px;
+}
+
+#column_name{
+    -fx-pref-width: 100px;
+}
+
+#column_cod_per_week{
+    -fx-pref-width: 100px;
+}
+
+#column_duration{
+    -fx-pref-width: 100px;
+}
+
+#column_cod_start_date{
+    -fx-pref-width: 150px;
+}
+
+#column_cod_end_date{
+    -fx-pref-width: 150px;
+}
+
+#column_wsjf{
+    -fx-pref-width: 150px;
+}
+

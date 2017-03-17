@@ -9,4 +9,5 @@ import java.util.Collection;
  */
 public interface Sequencer {
     Feature[] calculateSequence(Collection<Feature> features, DateTime startDate);
+    Feature[] calculateWsjfSequence(Collection<Feature> features);
 }

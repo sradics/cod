@@ -91,6 +91,8 @@ public class Feature {
     }
 
     public BigDecimal calculateCD3(){
+        if (costOfDelayPerWeek==null || durationInWeeks==null)
+            return BigDecimal.ZERO;
         if (durationInWeeks.compareTo(BigDecimal.ZERO)==0)
             return BigDecimal.ZERO;
         return costOfDelayPerWeek.divide(durationInWeeks,BigDecimal.ROUND_HALF_UP);
